@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
@@ -15,6 +16,7 @@ const (
 	clientAPIProtocolSupportedHi = 1
 )
 // Can't have constant slices so create this at runtime.
+// Order the API versions from most desirable to least desirable.
 var clientAPIProtocolSupported []int
 
 
@@ -53,6 +55,7 @@ func startRestAPI(settings util.AppSettings, c *ClientAPI, errChannel chan<- err
 		rest.Post("/client/establishment", c.HandleClientNetworkEstablishment),       // Handle network establishment.
 		rest.Post("/client/standard_request_cid", c.HandleClientStandardCIDDiscover), // Handle client standard cid request.
 		rest.Post("/client/dht_request_cid", c.HandleClientDHTCIDDiscover),           // Handle DHT client cid request.
+		rest.Post("/v1", c.msgRouter),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -66,3 +69,45 @@ func startRestAPI(settings util.AppSettings, c *ClientAPI, errChannel chan<- err
 	log.Fatal(http.ListenAndServe(":"+settings.BindRestAPI, api.MakeHandler()))
 }
 
+
+func (c *ClientAPI) msgRouter(w rest.ResponseWriter, r *rest.Request) {
+	payload := messages.CommonRequestMessageFields{}
+	err := r.DecodeJsonPayload(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		rest.Error(w, "Fail to decode payload.", http.StatusBadRequest)
+		return
+	}
+
+	// Only process the rest of the message if the protocol version is understood.
+	if (payload.ProtocolVersion != clientAPIProtocolVersion) {
+		// Go through the protocol versions supported by the client and the
+		// gateway from most desirable to least desirable, prioritising 
+		// the gateway preference over the client preference.
+		for _, clientProvVer := range payload.ProtocolSupported {
+			for gatewayProtVer := range clientAPIProtocolSupported {
+				if (clientProvVer == gatewayProtVer) {
+					// Request the client switch to this protocol version
+					response := messages.ProtocolChangeResponse{}
+					response.MessageType = messages.ProtocolChange
+					response.DesiredVersion = clientAPIProtocolVersion
+					w.WriteJson(response)
+					return
+				}
+			}
+		}
+		// No common protocol versions supported.
+		response := messages.ProtocolMismatchResponse{}
+		response.MessageType = messages.ProtocolMismatch
+		w.WriteJson(response)
+		return
+	}
+
+	switch (payload.MessageType) {
+	case messages.ClientEstablishmentRequestType:
+		c.HandleClientNetworkEstablishment(w, r)
+	}
+
+
+
+}

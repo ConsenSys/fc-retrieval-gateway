@@ -30,7 +30,7 @@ func (g *ClientAPI) HandleClientNetworkEstablishment(w rest.ResponseWriter, r *r
 	response := messages.ClientEstablishmentResponse{}
 	response.ProtocolVersion = clientAPIProtocolVersion
 	response.Challenge = payload.Challenge
-	response.Signature = "TODO: NONE YET!"
+	response.Signature = "TODO: NONE YET!!"
 	w.WriteJson(response)
 }
 

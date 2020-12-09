@@ -25,7 +25,7 @@ utest:
 # remove previous images and containers
 clean:
 	docker rm -f ${REGISTRY}fc-retrieval-gateway-builder 2> /dev/null || true
-	docker rm -f ${REGISTRY}fc-retrieval-gateway:${VERSION}" 2> /dev/null || true
+	docker rm -f ${REGISTRY}fc-retrieval-gateway:${VERSION} 2> /dev/null || true
 	docker rmi -f ${REGISTRY}fc-retrieval-gateway-builder || true
 	docker rmi -f "${REGISTRY}fc-retrieval-gateway:${VERSION}" || true
 

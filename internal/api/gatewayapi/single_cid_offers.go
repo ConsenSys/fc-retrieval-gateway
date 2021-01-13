@@ -9,6 +9,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
@@ -81,7 +82,8 @@ func AcknowledgeSingleCIDOffers(response *messages.GatewaySingleCIDOfferPublishR
 		// Sign the offer
 		sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response.PublishedGroupCIDs[i])
 		if err != nil {
-			return err
+			// Ignored.
+			logging.Error("Error in signing message.")
 		}
 		cidOffersAck[i].Signature = sig
 	}

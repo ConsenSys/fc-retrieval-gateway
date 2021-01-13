@@ -10,6 +10,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
@@ -53,7 +54,8 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *messages.GatewayDHT
 	// Sign the message
 	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response)
 	if err != nil {
-		return err
+		// Ignored.
+		logging.Error("Error in signing message.")
 	}
 	response.Signature = sig
 	// Send message

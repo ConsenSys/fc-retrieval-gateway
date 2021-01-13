@@ -40,6 +40,7 @@ func (g *ClientAPI) HandleClientNetworkEstablishment(w rest.ResponseWriter, cont
 	}
 
 	response.ProtocolVersion = clientAPIProtocolVersion
+	response.ProtocolSupported = clientAPIProtocolSupported
 	response.GatewayID = g.gateway.GatewayID.ToString()
 
 	sig, err := fcrcrypto.SignMessage(g.gateway.GatewayPrivateKey, g.gateway.GatewayPrivateKeyVersion, *response)

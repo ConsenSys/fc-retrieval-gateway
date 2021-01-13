@@ -41,8 +41,9 @@ type ProviderDHTPublishGroupCIDRequest struct {
 
 // ProviderDHTPublishGroupCIDAck is the acknowledgement to ProviderDHTPublishGroupCIDRequest
 type ProviderDHTPublishGroupCIDAck struct {
-	MessageType     int32  `json:"message_type"`
-	ProtocolVersion int32  `json:"protocol_version"`
-	Nonce           int64  `json:"nonce"`
-	Signature       string `json:"signature"`
+	MessageType       int32   `json:"message_type"`
+	ProtocolVersion   int32   `json:"protocol_version"`
+	ProtocolSupported []int32 `json:"protocol_supported"`
+	Nonce             int64   `json:"nonce"`
+	Signature         string  `json:"signature"`
 }

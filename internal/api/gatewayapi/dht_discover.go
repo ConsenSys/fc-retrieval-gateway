@@ -62,7 +62,7 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *messages.GatewayDHT
 }
 
 // RequestGatewayDHTDiscover is used to request a DHT CID Discover
-func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID, g *gateway.Gateway) (interface{}, error) {
+func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID, g *gateway.Gateway) (*messages.GatewayDHTDiscoverResponse, error) {
 	// Get the connection to the gateway.
 	pComm, err := GetConnForRequestingGateway(gatewayID, g)
 	if err != nil {
@@ -101,7 +101,7 @@ func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID, g *
 		response := messages.GatewayDHTDiscoverResponse{}
 		if json.Unmarshal(data, &response) == nil {
 			// Message is valid.
-			return response, nil
+			return &response, nil
 		}
 	}
 	// Message is invalid.

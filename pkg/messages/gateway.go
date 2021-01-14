@@ -29,9 +29,9 @@ type GatewaySingleCIDOfferPublishResponse struct {
 		ProviderID nodeid.NodeID `json:"provider_id"`
 		NumOffers  int64         `json:"num_of_offers"`
 		CIDOffers  []struct {
-			Price     int64         `json:"price_per_byte"`
+			Price     uint64        `json:"price_per_byte"`
 			Expiry    int64         `json:"expiry_date"`
-			QoS       int64         `json:"qos"`
+			QoS       uint64        `json:"qos"`
 			Signature string        `json:"signature"`
 			PieceCID  cid.ContentID `json:"piece_cid"`
 		} `json:"cid_offers"`
@@ -61,11 +61,12 @@ type GatewayDHTDiscoverRequest struct {
 
 // GatewayDHTDiscoverResponse is the response to GatewayDHTDiscoverRequest
 type GatewayDHTDiscoverResponse struct {
-	MessageType     int32                 `json:"message_type"`
-	ProtocolVersion int32                 `json:"protocol_version"`
-	PieceCID        cid.ContentID         `json:"piece_cid"`
-	Nonce           int64                 `json:"nonce"`
-	Found           bool                  `json:"found"`
-	Signature       string                `json:"signature"`
-	CIDGroupInfo    []CIDGroupInformation `json:"cid_group_information"`
+	MessageType       int32                 `json:"message_type"`
+	ProtocolVersion   int32                 `json:"protocol_version"`
+	ProtocolSupported []int32               `json:"protocol_supported"`
+	PieceCID          cid.ContentID         `json:"piece_cid"`
+	Nonce             int64                 `json:"nonce"`
+	Found             bool                  `json:"found"`
+	Signature         string                `json:"signature"`
+	CIDGroupInfo      []CIDGroupInformation `json:"cid_group_information"`
 }

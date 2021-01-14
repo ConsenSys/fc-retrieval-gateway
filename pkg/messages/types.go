@@ -26,7 +26,7 @@ const (
 	ClientDHTDiscoverResponseType               = 5
 	ProviderPublishGroupCIDRequestType          = 6
 	ProviderDHTPublishGroupCIDRequestType       = 7
-	ProviderDHTPublishGroupCIDResponseType      = 8
+	ProviderDHTPublishGroupCIDAckType           = 8
 	GatewaySingleCIDOfferPublishRequestType     = 9
 	GatewaySingleCIDOfferPublishResponseType    = 10
 	GatewaySingleCIDOfferPublishResponseAckType = 11

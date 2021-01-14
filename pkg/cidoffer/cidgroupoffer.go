@@ -31,15 +31,14 @@ const CidGroupOfferDigestSize = sha512.Size256
 // CidGroupOffer represents a CID Group Offer. That is, an offer to deliver content
 // for Piece CIDs at a certain price
 type CidGroupOffer struct {
-	NodeID *nodeid.NodeID
-	Cids   []cid.ContentID
-	Price  uint64
-	Expiry int64
-	QoS    uint64
-	// TODO:
-	// 1. Provider signature
-	// 2. Merkle Proof
-	// 3. Funded Payment channel
+	NodeID               *nodeid.NodeID
+	Cids                 []cid.ContentID
+	Price                uint64
+	Expiry               int64
+	QoS                  uint64
+	Signature            string
+	MerkleProof          string
+	FundedPaymentChannel bool //TODO: Is this boolean?
 }
 
 // NewCidGroupOffer creates an unsigned CID Group Offer.

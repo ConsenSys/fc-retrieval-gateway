@@ -47,7 +47,14 @@ func handleIncomingProviderConnection(conn net.Conn, g *gateway.Gateway) {
 			logging.Error1(err)
 			return
 		}
-		if msgType == messages.ProviderDHTPublishGroupCIDRequestType {
+		if msgType == messages.ProviderPublishGroupCIDRequestType {
+			request := messages.ProviderPublishGroupCIDRequest{}
+			if json.Unmarshal(data, &request) == nil {
+				// Message is valid.
+				handleProviderPublishGroupCIDRequest(conn, &request)
+				continue
+			}
+		} else if msgType == messages.ProviderDHTPublishGroupCIDRequestType {
 			request := messages.ProviderDHTPublishGroupCIDRequest{}
 			if json.Unmarshal(data, &request) == nil {
 				// Message is valid.

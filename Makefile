@@ -12,8 +12,7 @@ release: clean build push clean
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
-	docker build -t ${REGISTRY}fc-retrieval-gateway-builder .
-	docker run --rm ${REGISTRY}fc-retrieval-gateway-builder | docker build --pull -t "${REGISTRY}fc-retrieval-gateway:${VERSION}" -
+	docker build -t ${REGISTRY}fc-retrieval-gateway:${VERSION} .
 
 # push the image to an registry
 push:
@@ -28,5 +27,8 @@ clean:
 	docker rm -f ${REGISTRY}fc-retrieval-gateway:${VERSION} 2> /dev/null || true
 	docker rmi -f ${REGISTRY}fc-retrieval-gateway-builder || true
 	docker rmi -f "${REGISTRY}fc-retrieval-gateway:${VERSION}" || true
+
+cleanoldfile:
+	docker rm -f ${REGISTRY}fc-retrieval-gateway-builder 2> /dev/null || true
 
 .PHONY: release clean build push

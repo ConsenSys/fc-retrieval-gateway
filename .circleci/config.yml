@@ -36,6 +36,7 @@ jobs:
       - run:
           name: Publish Docker
           command: |
+            make
             docker login --username "${DOCKER_USER_RW}" --password "${DOCKER_PASSWORD_RW}"
             make push
 

@@ -63,7 +63,7 @@ workflows:
       - utest
       - release
       - publishDocker:
-          filters:
+          # filters:
           #  branches:
           #    only:
           #      - main

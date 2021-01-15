@@ -24,7 +24,9 @@ jobs:
       - run: make
 
   publishDocker:
-    executor: medium_executor
+    docker:
+      - image: circleci/golang:1.15
+    working_directory: /go/src/github.com/ConsenSys/fc-retrieval-gateway/
     steps:
       - checkout
       - attach_workspace:

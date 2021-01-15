@@ -3,7 +3,7 @@
 # Build the Filecoin Retrieval Gateway
 
 VERSION?=v1
-IMAGE?=fc-retrieval-gateway
+IMAGE?=fc-retrieval-gateway:dev
 
 
 release: clean build push

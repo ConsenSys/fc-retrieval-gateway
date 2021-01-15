@@ -23,6 +23,20 @@ jobs:
           docker_layer_caching: true
       - run: make
 
+  publishDocker:
+    executor: medium_executor
+    steps:
+      - prepare
+      - attach_workspace:
+          at: ~/project
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Publish Docker
+          command: |
+            docker login --username "${DOCKER_USER_RW}" --password "${DOCKER_PASSWORD_RW}"
+            make push
+
   utest:
     docker:
       # specify the version
@@ -46,3 +60,16 @@ workflows:
     jobs:
       - utest
       - release
+      - publishDocker:
+          filters:
+            branches:
+              only:
+                - main
+                # - /^release-.*/
+            #tags:
+            #  <<: *filters-release-tags
+          requires:
+            - utest
+            - release
+          context:
+            - dockerhub-quorumengineering-rw

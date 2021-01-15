@@ -26,7 +26,7 @@ jobs:
   publishDocker:
     executor: medium_executor
     steps:
-      - prepare
+      - checkout
       - attach_workspace:
           at: ~/project
       - setup_remote_docker:

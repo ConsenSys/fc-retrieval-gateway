@@ -64,9 +64,9 @@ workflows:
       - release
       - publishDocker:
           filters:
-            branches:
-              only:
-                - main
+          #  branches:
+          #    only:
+          #      - main
                 # - /^release-.*/
             #tags:
             #  <<: *filters-release-tags

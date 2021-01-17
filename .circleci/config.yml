@@ -69,8 +69,8 @@ workflows:
             only:
               - main
               - /^release-.*/
-            tags:
-              <<: *filters-release-tags
+            #tags:
+            #  <<: *filters-release-tags
           requires:
             - utest
             - release

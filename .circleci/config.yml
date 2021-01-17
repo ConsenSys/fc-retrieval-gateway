@@ -64,13 +64,13 @@ workflows:
       - utest
       - release
       - publishDocker:
-          # filters:
-          #  branches:
-          #    only:
-          #      - main
-                # - /^release-.*/
-            #tags:
-            #  <<: *filters-release-tags
+          filters:
+            branches:
+            only:
+              - main
+              - /^release-.*/
+            tags:
+              <<: *filters-release-tags
           requires:
             - utest
             - release

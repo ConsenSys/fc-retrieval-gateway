@@ -66,9 +66,9 @@ workflows:
       - publishDocker:
           filters:
             branches:
-            only:
-              - main
-              - /^release-.*/
+              only:
+                - main
+                - /^release-.*/
           requires:
             - utest
             - release

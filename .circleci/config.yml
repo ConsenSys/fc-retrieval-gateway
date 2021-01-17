@@ -67,10 +67,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
                 - /^release-.*/
-            tags:
-              <<: *filters-release-tags
           requires:
             - utest
             - release

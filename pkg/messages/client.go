@@ -7,6 +7,11 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
+// ClientCommonRequestFieldsInterface defines functions that client request message structures need to implement.
+type ClientCommonRequestFieldsInterface interface {
+	Set(messageType int32, protocolVersion int32, protocolSupported []int32, clientID string, ttl int64) 
+	SetSignature(signature string)
+}
 
 // ClientCommonRequestFields common fields in requests from client to gateway.
 type ClientCommonRequestFields struct {

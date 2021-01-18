@@ -7,15 +7,38 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
-// ClientEstablishmentRequest is the request from client to gateway to establish connection
-type ClientEstablishmentRequest struct {
+
+// ClientCommonRequestFields common fields in requests from client to gateway.
+type ClientCommonRequestFields struct {
 	MessageType       int32   `json:"message_type"`
 	ProtocolVersion   int32   `json:"protocol_version"`
 	ProtocolSupported []int32 `json:"protocol_supported"`
 	ClientID          string  `json:"client_id"`
-	Challenge         string  `json:"challenge"`
 	TTL               int64   `json:"ttl"`
 	Signature         string  `json:"signature"`
+}
+
+// Set sets the common fields.
+func (c *ClientCommonRequestFields) Set(
+	messageType int32, protocolVersion int32, protocolSupported []int32,
+	clientID string, ttl int64) {
+		c.MessageType = messageType
+		c.ProtocolVersion = protocolVersion
+		c.ProtocolSupported = protocolSupported
+		c.ClientID = clientID
+		c.TTL = ttl
+	}
+
+// SetSignature sets the signature field.
+func (c *ClientCommonRequestFields) SetSignature(signature string) {
+	c.Signature = signature
+}
+
+
+// ClientEstablishmentRequest is the request from client to gateway to establish connection
+type ClientEstablishmentRequest struct {
+	Challenge         string  `json:"challenge"`
+	ClientCommonRequestFields
 }
 
 // ClientEstablishmentResponse is the response to ClientEstablishmentRequest
@@ -30,13 +53,9 @@ type ClientEstablishmentResponse struct {
 
 // ClientStandardDiscoverRequest is the requset from client to gateway to ask for cid offer
 type ClientStandardDiscoverRequest struct {
-	MessageType       int32         `json:"message_type"`
-	ProtocolVersion   int32         `json:"protocol_version"`
-	ProtocolSupported []int32       `json:"protocol_supported"`
 	PieceCID          cid.ContentID `json:"piece_cid"`
 	Nonce             int64         `json:"nonce"`
-	TTL               int64         `json:"ttl"`
-	Signature         string        `json:"signature"`
+	ClientCommonRequestFields
 }
 
 // ClientStandardDiscoverResponse is the response to ClientStandardDiscoverResponse

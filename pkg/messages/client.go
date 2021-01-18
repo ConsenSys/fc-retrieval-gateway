@@ -7,12 +7,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
-// ClientCommonRequestFieldsInterface defines functions that client request message structures need to implement.
-type ClientCommonRequestFieldsInterface interface {
-	Set(messageType int32, protocolVersion int32, protocolSupported []int32, clientID string, ttl int64) 
-	SetSignature(signature string)
-}
-
 // ClientCommonRequestFields common fields in requests from client to gateway.
 type ClientCommonRequestFields struct {
 	MessageType       int32   `json:"message_type"`
@@ -77,14 +71,11 @@ type ClientStandardDiscoverResponse struct {
 
 // ClientDHTDiscoverRequest is the request from client to gateway to ask for cid offer using DHT
 type ClientDHTDiscoverRequest struct {
-	MessageType        int32         `json:"message_type"`
-	ProtocolVersion    int32         `json:"protocol_version"`
-	ProtocolSupported  []int32       `json:"protocol_supported"`
 	PieceCID           cid.ContentID `json:"piece_cid"`
 	Nonce              int64         `json:"nonce"`
-	TTL                int64         `json:"ttl"`
 	NumDHT             int64         `json:"num_dht"`
 	IncrementalResults bool          `json:"incremental_results"`
+	ClientCommonRequestFields
 }
 
 // ClientDHTDiscoverResponse is the response to ClientDHTDiscoverRequest

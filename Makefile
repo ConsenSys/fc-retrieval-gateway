@@ -4,7 +4,7 @@
 
 # Usage:
 #   [VERSION=v3] [REGISTRY="gcr.io/google_containers"] make build
-VERSION?=v1
+VERSION?=dev
 #REGISTRY?=gcr.io/google_containers/
 REGISTRY?=
 

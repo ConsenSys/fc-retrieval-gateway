@@ -21,6 +21,36 @@ type FCRMessage struct {
 	Signature         string  `json:"message_signature"`
 }
 
+// GetMessageType is used to get the message type of the message
+func (fcrMsg *FCRMessage) GetMessageType() int32 {
+	return fcrMsg.MessageType
+}
+
+// GetProtocolVersion is used to get the protocol version of peer
+func (fcrMsg *FCRMessage) GetProtocolVersion() int32 {
+	return fcrMsg.ProtocolVersion
+}
+
+// GetProtocolSupported is used to get the protocol supported of peer
+func (fcrMsg *FCRMessage) GetProtocolSupported() []int32 {
+	return fcrMsg.GetProtocolSupported()
+}
+
+// GetMessageBody is used to get the message body
+func (fcrMsg *FCRMessage) GetMessageBody() []byte {
+	return fcrMsg.MessageBody
+}
+
+// GetSignature is used to get the signature
+func (fcrMsg *FCRMessage) GetSignature() string {
+	return fcrMsg.Signature
+}
+
+// SetSignature is used to set the signature
+func (fcrMsg *FCRMessage) SetSignature(signature string) {
+	fcrMsg.Signature = signature
+}
+
 // FCRMsgToBytes converts a FCRMessage to bytes
 func FCRMsgToBytes(fcrMsg *FCRMessage) ([]byte, error) {
 	return json.Marshal(fcrMsg)

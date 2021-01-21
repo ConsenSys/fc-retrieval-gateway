@@ -64,12 +64,7 @@ func handleIncomingGatewayConnection(conn net.Conn, g *gateway.Gateway) {
 				}
 			}
 			// Message is invalid.
-			err = tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
-			if err != nil && !tcpcomms.IsTimeoutError(err) {
-				// Error in tcp communication, drop the connection.
-				logging.Error1(err)
-				return
-			}
+			tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
 		}
 	}
 }

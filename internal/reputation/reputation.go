@@ -52,9 +52,14 @@ func GetSingleInstance() *Reputation {
 	return instance
 }
 
-// establishClientReputation initialise the reputation of a Retrieval Client
+// establishClientReputation initialises the reputation of a Retrieval Client
 func (r *Reputation) establishClientReputation(clientNodeID *nodeid.NodeID) {
 	r.setClientReputation(clientNodeID, clientInitialReputation)
+}
+
+// SetClientReputation sets the reputation of a Retrieval Client
+func (r *Reputation) SetClientReputation(clientNodeID *nodeid.NodeID, newReputation int64) {
+	r.setClientReputation(clientNodeID, newReputation)
 }
 
 // ClientExists determines if a client has reputation

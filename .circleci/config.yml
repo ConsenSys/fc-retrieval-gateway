@@ -23,6 +23,23 @@ jobs:
           docker_layer_caching: true
       - run: make
 
+  publishDocker:
+    docker:
+      - image: circleci/golang:1.15
+    working_directory: /go/src/github.com/ConsenSys/fc-retrieval-gateway/
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Publish Docker
+          command: |
+            make
+            docker login --username "${DOCKER_USER_RW}" --password "${DOCKER_PASSWORD_RW}"
+            make push
+
   utest:
     docker:
       # specify the version
@@ -46,3 +63,13 @@ workflows:
     jobs:
       - utest
       - release
+      - publishDocker:
+          filters:
+            branches:
+              only:
+                - /^release-.*/
+          requires:
+            - utest
+            - release
+          context:
+            - dockerhub-quorumengineering-rw

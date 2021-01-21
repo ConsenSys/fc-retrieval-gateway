@@ -2,33 +2,32 @@
 
 # Build the Filecoin Retrieval Gateway
 
-# Usage:
-#   [VERSION=v3] [REGISTRY="gcr.io/google_containers"] make build
 VERSION?=dev
-#REGISTRY?=gcr.io/google_containers/
-REGISTRY?=
+IMAGE?=fc-retrieval-gateway:dev
 
-release: clean build push clean
+release: clean build push
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
-	docker build -t ${REGISTRY}fc-retrieval-gateway:${VERSION} .
+	docker build -t ${IMAGE} .
 
 # push the image to an registry
 push:
-#	gcloud docker -- push ${REGISTRY}/fc-retrieval-gateway:${VERSION}
+	cd scripts; bash push.sh ${VERSION} ${IMAGE}
 
 utest:
 	go test ./...
 
 # remove previous images and containers
 clean:
-	docker rm -f ${REGISTRY}fc-retrieval-gateway-builder 2> /dev/null || true
-	docker rm -f ${REGISTRY}fc-retrieval-gateway:${VERSION} 2> /dev/null || true
-	docker rmi -f ${REGISTRY}fc-retrieval-gateway-builder || true
-	docker rmi -f "${REGISTRY}fc-retrieval-gateway:${VERSION}" || true
+	docker rm -f ${IMAGE} 2> /dev/null || true
+	docker rmi -f ${IMAGE} || true
+
+cleanoldfiles:
+	docker rm -f fc-retrieval-gateway-builder 2> /dev/null || true
+	docker rmi -f fc-retrieval-gateway-builder || true
 
 cleanoldfile:
-	docker rm -f ${REGISTRY}fc-retrieval-gateway-builder 2> /dev/null || true
+	docker rm -f fc-retrieval-gateway-builder 2> /dev/null || true
 
-.PHONY: release clean build push
+.PHONY: release clean build push cleanoldfiles utest

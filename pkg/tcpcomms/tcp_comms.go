@@ -8,6 +8,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 )
 
@@ -64,9 +65,15 @@ func SendProtocolMismatch(conn net.Conn, timeout time.Duration) error {
 }
 
 // SendInvalidMessage sends an invalid message to a given connection
-func SendInvalidMessage(conn net.Conn, timeout time.Duration) error {
+func SendInvalidMessage(conn net.Conn, timeout time.Duration, msg string) {
 	data, _ := json.Marshal(messages.InvalidMessageResponse{MessageType: messages.InvalidMessage})
-	return SendTCPMessage(conn, messages.InvalidMessage, data, timeout)
+	logging.Info(msg)
+	// Message is invalid.
+	err := SendTCPMessage(conn, messages.InvalidMessage, data, timeout)
+	if err != nil && !IsTimeoutError(err) {
+		// Error in tcp communication, drop the connection.
+		logging.Error1(err)
+	}
 }
 
 // SendMessageWithType sends a given message with a given type to a given connection

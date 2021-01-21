@@ -38,4 +38,6 @@ const (
 	InsufficientFunds                           = 103
 	AdminGetReputationChallengeType             = 200
 	AdminGetReputationResponseType              = 201
+	AdminSetReputationChallengeType             = 202
+	AdminSetReputationResponseType              = 203
 )

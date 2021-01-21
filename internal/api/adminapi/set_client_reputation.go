@@ -17,6 +17,7 @@ package adminapi
 
 import (
 	"encoding/json"
+	"math/big"
 	"net"
 	"strconv"
 
@@ -29,37 +30,48 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
-func handleAdminGetReputationChallenge(conn net.Conn, request *messages.AdminGetReputationChallenge) error {
+func handleAdminSetReputationChallenge(conn net.Conn, request *messages.AdminSetReputationChallenge) error {
 
-	logging.Info("In handleAdminGetReputationChallenge")
+	logging.Info("In handleAdminSetReputationChallenge")
 
 	// Get gateway core struct
 	gw := gateway.GetSingleInstance()
 	clientID := request.ClientID
+	clientrep := request.Reputation
 
 	// Construct response
 	response := messages.AdminGetReputationResponse{
-		MessageType:     messages.AdminGetReputationResponseType,
+		MessageType:     messages.AdminSetReputationResponseType,
 		ProtocolVersion: gw.ProtocolVersion,
 		ClientID:        request.ClientID}
 
 	rep := reputation.GetSingleInstance()
-	id, err := nodeid.NewNodeIDFromString(clientID)
+	clientIDInt64, err := strconv.ParseInt(clientID, 10, 64)
 	if err != nil {
-		logging.Info("Cannot find clientID: %s", err)
+		logging.Info("Cannot parse clientID %s into an int64.", clientID)
 		// Message is invalid.
-		err = tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
-		if err != nil && !tcpcomms.IsTimeoutError(err) {
-			// Error in tcp communication, drop the connection.
-			logging.Error1(err)
-			return nil
-		}
-		return nil
+		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
 	}
 
-	response.Reputation, response.Exists = rep.GetClientReputation(id)
+	clientIDBigInt := big.NewInt(clientIDInt64)
+	node, err := nodeid.NewNodeID(clientIDBigInt)
+	if err != nil {
+		logging.Info("Cannot parse clientID %s into a nodeID.", clientID)
+		// Message is invalid.
+		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+	}
+	exists := rep.ClientExists(node)
+	if !exists {
+		logging.Info("Cannot find clientID: %s does not exist.", clientID)
+		// Message is invalid.
+		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+	}
+
+	// Set reputation
+	rep.SetClientReputation(node, clientrep)
+
 	// Send message
 	data, _ := json.Marshal(response)
-	logging.Info("Admin action: Returned %s for client %s", strconv.FormatInt(response.Reputation, 10), clientID)
-	return tcpcomms.SendTCPMessage(conn, messages.AdminGetReputationResponseType, data, settings.DefaultTCPInactivityTimeout)
+	logging.Info("Admin action: Set reputation %s for client %s", strconv.FormatInt(response.Reputation, 10), clientID)
+	return tcpcomms.SendTCPMessage(conn, messages.AdminSetReputationResponseType, data, settings.DefaultTCPInactivityTimeout)
 }

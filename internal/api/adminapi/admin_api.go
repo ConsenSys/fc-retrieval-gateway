@@ -76,12 +76,29 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 					}
 					continue
 				}
+			} else if msgType == messages.AdminGetReputationChallengeType {
+				request := messages.AdminSetReputationChallenge{}
+				if json.Unmarshal(data, &request) == nil {
+					// Message is valid.
+					err = handleAdminSetReputationChallenge(conn, &request)
+					if err != nil && !tcpcomms.IsTimeoutError(err) {
+						// Error in tcp communication, drop the connection.
+						logging.Error1(err)
+						return
+					}
+					continue
+				}
 			}
 		}
 
 		/*
 			   TODO: Add additional message types:
-			   - reset reputation of Client / other gateway / provider.
+			   ✔︎ Get a client's reputation.
+			   - Set reputation of client arbitrarily.
+			   - Set reputation of client based on various actions (e.g. using existing functionality).
+			   - Set reputation of other gateway.
+			   - Set reputation of provider.
+			   - Get id of random client (for testing purposes).
 			   - Remove Piece CID offers from the standard cache.
 			   - Remove Piece CID offers from the DHT cache.
 			   - Remove all Piece CID offers from a certain provider from the standard or DHT cache.
@@ -94,12 +111,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 		*/
 
 		// Message is invalid.
-		err = tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
-		if err != nil && !tcpcomms.IsTimeoutError(err) {
-			// Error in tcp communication, drop the connection.
-			logging.Error1(err)
-			return
-		}
+		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
 	}
 }
 

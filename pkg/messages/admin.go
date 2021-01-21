@@ -32,3 +32,20 @@ type AdminGetReputationResponse struct {
 	Reputation      int64  `json:"reputation"`
 	Exists          bool   `json:"exists"`
 }
+
+// AdminSetReputationChallenge is the request from an admin client to a gateway to set a client's reputation
+type AdminSetReputationChallenge struct {
+	MessageType     int32  `json:"message_type"`
+	ProtocolVersion int32  `json:"protocol_version"`
+	ClientID        string `json:"clientid"`
+	Reputation      int64  `json:"reputation"`
+}
+
+// AdminSetReputationResponse is the response to AdminSetReputationChallenge
+type AdminSetReputationResponse struct {
+	MessageType     int32  `json:"message_type"`
+	ProtocolVersion int32  `json:"protocol_version"`
+	ClientID        string `json:"clientid"`
+	Reputation      int64  `json:"reputation"`
+	Exists          bool   `json:"exists"`
+}

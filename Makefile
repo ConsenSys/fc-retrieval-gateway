@@ -9,7 +9,7 @@ release: clean build push
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
-	docker build -t ${IMAGE} .
+	docker build -t ${IMAGE}:${VERSION} .
 
 # push the image to an registry
 push:

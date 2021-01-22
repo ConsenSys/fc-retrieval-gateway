@@ -201,7 +201,7 @@ func EncodeGatewayDHTDiscoverResponse(
 	pieceCID *cid.ContentID,
 	nonce int64,
 	found bool,
-	offers []cidoffer.CidGroupOffer,
+	offers []*cidoffer.CidGroupOffer,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, 0)
 	if found {

@@ -3,22 +3,21 @@ package gatewayapi
 // Copyright (C) 2020 ConsenSys Software Inc
 
 import (
-	"encoding/json"
 	"net"
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
 // StartGatewayAPI starts the TCP API as a separate go routine.
-func StartGatewayAPI(settings settings.AppSettings, g *gateway.Gateway) error {
+func StartGatewayAPI(settings settings.AppSettings) error {
 	// Start server
-	ln, err := net.Listen("tcp", ":" + settings.BindGatewayAPI)
+	ln, err := net.Listen("tcp", settings.BindGatewayAPI)
 	if err != nil {
 		return err
 	}
@@ -30,41 +29,42 @@ func StartGatewayAPI(settings settings.AppSettings, g *gateway.Gateway) error {
 				continue
 			}
 			logging.Info("Incoming connection from gateway at :%s", conn.RemoteAddr())
-			go handleIncomingGatewayConnection(conn, g)
+			go handleIncomingGatewayConnection(conn)
 		}
 	}(ln)
 	logging.Info("Listening on %s for connections from Gateways", settings.BindGatewayAPI)
 	return nil
 }
 
-func handleIncomingGatewayConnection(conn net.Conn, g *gateway.Gateway) {
+func handleIncomingGatewayConnection(conn net.Conn) {
 	// Close connection on exit.
 	defer conn.Close()
 
 	// Loop until error occurs and connection is dropped.
 	for {
-		msgType, data, err := tcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
-		if err != nil && !tcpcomms.IsTimeoutError(err) {
+		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
+		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 			// Error in tcp communication, drop the connection.
 			logging.Error1(err)
 			return
 		}
 		if err == nil {
-			if msgType == messages.GatewayDHTDiscoverRequestType {
-				request := messages.GatewayDHTDiscoverRequest{}
-				if json.Unmarshal(data, &request) == nil {
-					// Message is valid.
-					err = handleGatewayDHTDiscoverRequest(conn, &request)
-					if err != nil && !tcpcomms.IsTimeoutError(err) {
-						// Error in tcp communication, drop the connection.
-						logging.Error1(err)
-						return
-					}
-					continue
+			if message.MessageType == fcrmessages.GatewayDHTDiscoverRequestType {
+				err = handleGatewayDHTDiscoverRequest(conn, message)
+				if err != nil && fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection
+					logging.Error1(err)
+					return
 				}
+				continue
 			}
 			// Message is invalid.
-			tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+			err = fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
+			if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+				// Error in tcp communication, drop the connection.
+				logging.Error1(err)
+				return
+			}
 		}
 	}
 }

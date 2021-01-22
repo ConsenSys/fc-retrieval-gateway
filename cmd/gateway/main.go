@@ -4,7 +4,7 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
-	
+
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/adminapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/clientapi"
@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	err = gatewayapi.StartGatewayAPI(settings, g)
+	err = gatewayapi.StartGatewayAPI(settings)
 	if err != nil {
 		logging.Error("Error starting gateway tcp server: %s", err.Error())
 		return

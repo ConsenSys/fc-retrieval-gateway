@@ -1,25 +1,30 @@
 package providerapi
 
 import (
-	"encoding/json"
 	"net"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
-func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *messages.ProviderDHTPublishGroupCIDRequest) error {
+func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FCRMessage) error {
+	// Get the core structure
 	g := gateway.GetSingleInstance()
-	for _, offer := range request.CIDOffers {
+
+	nonce, providerID, offers, err := fcrmessages.DecodeProviderDHTPublishGroupCIDRequest(request)
+	if err != nil {
+		return err
+	}
+
+	for _, offer := range offers {
 		if g.Offers.Add(&cidoffer.CidGroupOffer{
-			NodeID:               &request.ProviderID,
-			Cids:                 []cid.ContentID{offer.PieceCID},
+			NodeID:               providerID,
+			Cids:                 offer.Cids,
 			Price:                offer.Price,
 			Expiry:               offer.Expiry,
 			QoS:                  offer.QoS,
@@ -32,18 +37,16 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *messages.Pr
 		}
 	}
 	// Sign the message
-	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, request)
+	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, request.MessageBody)
 	if err != nil {
 		// Ignored.
 		logging.Error("Error in signing message.")
 	}
 
-	// Respond to provider.
-	response, _ := json.Marshal(messages.ProviderDHTPublishGroupCIDAck{
-		MessageType:       messages.GatewayDHTDiscoverResponseType,
-		ProtocolVersion:   g.ProtocolVersion,
-		ProtocolSupported: g.ProtocolSupported,
-		Nonce:             request.Nonce,
-		Signature:         sig})
-	return tcpcomms.SendTCPMessage(conn, messages.ProviderDHTPublishGroupCIDAckType, response, settings.DefaultTCPInactivityTimeout)
+	response, err := fcrmessages.EncodeProviderDHTPublishGroupCIDAck(nonce, sig)
+	if err != nil {
+		return err
+	}
+
+	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

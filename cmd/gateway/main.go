@@ -36,7 +36,7 @@ func main() {
 		return
 	}
 
-	err = providerapi.StartProviderAPI(settings, g)
+	err = providerapi.StartProviderAPI(settings)
 	if err != nil {
 		logging.Error("Error starting provider tcp server: %s", err.Error())
 		return

@@ -1,22 +1,21 @@
 package providerapi
 
 import (
-	"encoding/json"
 	"net"
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
 // StartProviderAPI starts the TCP API as a separate go routine.
-func StartProviderAPI(settings settings.AppSettings, g *gateway.Gateway) error {
+func StartProviderAPI(settings settings.AppSettings) error {
 	// Start server
-	ln, err := net.Listen("tcp", ":" + settings.BindProviderAPI)
+	ln, err := net.Listen("tcp", settings.BindProviderAPI)
 	if err != nil {
 		return err
 	}
@@ -28,47 +27,52 @@ func StartProviderAPI(settings settings.AppSettings, g *gateway.Gateway) error {
 				continue
 			}
 			logging.Info("Incoming connection from provider at :%s\n", conn.RemoteAddr())
-			go handleIncomingProviderConnection(conn, g)
+			go handleIncomingProviderConnection(conn)
 		}
 	}(ln)
 	logging.Info("Listening on %s for connections from Providers\n", settings.BindProviderAPI)
 	return nil
 }
 
-func handleIncomingProviderConnection(conn net.Conn, g *gateway.Gateway) {
+func handleIncomingProviderConnection(conn net.Conn) {
 	// Close connection on exit.
 	defer conn.Close()
 
 	// Loop until error occurs and connection is dropped.
 	for {
-		msgType, data, err := tcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
-		if err != nil && !tcpcomms.IsTimeoutError(err) {
+		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
+
+		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 			// Error in tcp communication, drop the connection.
 			logging.Error1(err)
 			return
 		}
-		if msgType == messages.ProviderPublishGroupCIDRequestType {
-			request := messages.ProviderPublishGroupCIDRequest{}
-			if json.Unmarshal(data, &request) == nil {
-				// Message is valid.
-				handleProviderPublishGroupCIDRequest(conn, &request)
+		if err == nil {
+			if message.MessageType == fcrmessages.ProviderPublishGroupCIDRequestType {
+				err = handleProviderPublishGroupCIDRequest(conn, message)
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection
+					logging.Error1(err)
+					return
+				}
 				continue
-			}
-		} else if msgType == messages.ProviderDHTPublishGroupCIDRequestType {
-			request := messages.ProviderDHTPublishGroupCIDRequest{}
-			if json.Unmarshal(data, &request) == nil {
-				// Message is valid.
-				err = handleProviderDHTPublishGroupCIDRequest(conn, &request)
-				if err != nil && !tcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection.
+			} else if message.MessageType == fcrmessages.ProviderDHTPublishGroupCIDRequestType {
+				err = handleProviderDHTPublishGroupCIDRequest(conn, message)
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection
 					logging.Error1(err)
 					return
 				}
 				continue
 			}
+			// Message is invalid.
+			err = fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
+			if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+				// Error in tcp communication, drop the connection.
+				logging.Error1(err)
+				return
+			}
 		}
-		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
 	}
 }
 

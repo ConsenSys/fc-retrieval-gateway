@@ -18,6 +18,14 @@ func Init(conf *viper.Viper) {
 	log.Logger = zerolog.New(writer)
 }
 
+// Init1 initialises the logger without a Viper object
+func Init1(logLevel string, logTarget string) {
+	conf := viper.New()
+	conf.Set("LOG_LEVEL", logLevel)
+	conf.Set("LOG_TARGET", logTarget)
+	Init(conf)
+}
+
 func setTimeFormat() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 }

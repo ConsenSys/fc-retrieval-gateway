@@ -94,14 +94,14 @@ func Panic(msg string, args ...interface{}) {
 	log.Panic().Msgf(msg, args...)
 }
 
-/* TODO: Keep to avoid issues */
-
+// ErrorAndPanic is now deprecated. It is equivalent to Panic.
 func ErrorAndPanic(msg string, args ...interface{}) {
-	log.Error().Msgf(msg, args...)
+	Panic(msg, args...)
 }
 
+// Error1 prints an Error level log for an error
 func Error1(err error) {
-	log.Error().Err(err).Msg("Error")
+	Error("Error: %s", err)
 }
 
 // InfoEnabled returns true if Info log level is enabled.
@@ -109,4 +109,3 @@ func InfoEnabled() bool {
 	return log.Info().Enabled()
 }
 
-/* END TODO */

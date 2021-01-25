@@ -104,4 +104,9 @@ func Error1(err error) {
 	log.Error().Err(err).Msg("Error")
 }
 
+// InfoEnabled returns true if Info log level is enabled.
+func InfoEnabled() bool {
+	return log.Info().Enabled()
+}
+
 /* END TODO */

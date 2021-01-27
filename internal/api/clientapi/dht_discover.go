@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/gatewayapi"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
@@ -13,10 +14,12 @@ import (
 )
 
 // HandleClientDHTCIDDiscover is used to handle client request for cid offer
-func (c *ClientAPI) HandleClientDHTCIDDiscover(w rest.ResponseWriter, content []byte) {
-	request, err := fcrmessages.FCRMsgFromBytes(content)
-	cid, nonce, ttl, numDHT, _, err2 := fcrmessages.DecodeClientDHTDiscoverRequest(request)
-	if err != nil || err2 != nil {
+func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+	// Get core structure
+	g := gateway.GetSingleInstance()
+
+	cid, nonce, ttl, numDHT, _, err := fcrmessages.DecodeClientDHTDiscoverRequest(request)
+	if err != nil {
 		s := "Client DHT CID Discovery: Failed to decode payload."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
@@ -29,10 +32,10 @@ func (c *ClientAPI) HandleClientDHTCIDDiscover(w rest.ResponseWriter, content []
 		return
 	}
 	// Use DHT to get response.
-	c.gateway.GatewayAddressMapLock.RLock()
-	defer c.gateway.GatewayAddressMapLock.RUnlock()
+	g.GatewayAddressMapLock.RLock()
+	defer g.GatewayAddressMapLock.RUnlock()
 
-	if len(c.gateway.GatewayAddressMap) < int(numDHT) {
+	if len(g.GatewayAddressMap) < int(numDHT) {
 		s := "Gateway does not store enough peers."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
@@ -43,7 +46,7 @@ func (c *ClientAPI) HandleClientDHTCIDDiscover(w rest.ResponseWriter, content []
 	// TODO: Need to add an algorithm to select gateways from the map.
 	// For now, it is random.
 	i := 0
-	for k := range c.gateway.GatewayAddressMap {
+	for k := range g.GatewayAddressMap {
 		if i >= int(numDHT) {
 			break
 		}

@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
 func getTime(w rest.ResponseWriter, r *rest.Request) {
@@ -20,7 +20,7 @@ func getTime(w rest.ResponseWriter, r *rest.Request) {
 func getHostname(w rest.ResponseWriter, r *rest.Request) {
 	name, err := os.Hostname()
 	if err != nil {
-		logging.Info("Get host name1: %s", err.Error()) 
+		logging.Info("Get host name1: %s", err.Error())
 		return
 	}
 

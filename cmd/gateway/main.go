@@ -24,7 +24,7 @@ func main() {
 	// Initialise a dummy gateway instance.
 	g := gateway.GetSingleInstance(&settings)
 
-	_, err := clientapi.StartClientRestAPI(settings, g)
+	err := clientapi.StartClientRestAPI(settings)
 	if err != nil {
 		logging.Error("Error starting server: Client REST API: %s", err.Error())
 		return

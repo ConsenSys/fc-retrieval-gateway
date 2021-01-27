@@ -163,7 +163,7 @@ func EncodeClientStandardDiscoverResponse(
 	pieceCID *cid.ContentID,
 	nonce int64,
 	found bool,
-	offers []cidoffer.CidGroupOffer,
+	offers []*cidoffer.CidGroupOffer,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, 0)
 	if found {
@@ -201,7 +201,7 @@ func DecodeClientStandardDiscoverResponse(fcrMsg *FCRMessage) (
 	*cid.ContentID, // piece cid
 	int64, // nonce
 	bool, // found
-	[]cidoffer.CidGroupOffer, // offers
+	[]*cidoffer.CidGroupOffer, // offers
 	error, // error
 ) {
 	if fcrMsg.MessageType != ClientStandardDiscoverResponseType {
@@ -212,10 +212,10 @@ func DecodeClientStandardDiscoverResponse(fcrMsg *FCRMessage) (
 	if err != nil {
 		return nil, 0, false, nil, err
 	}
-	offers := make([]cidoffer.CidGroupOffer, 0)
+	offers := make([]*cidoffer.CidGroupOffer, 0)
 	if msg.Found {
 		for _, offerInfo := range msg.CIDGroupInfo {
-			offers = append(offers, cidoffer.CidGroupOffer{
+			offers = append(offers, &cidoffer.CidGroupOffer{
 				NodeID:               &offerInfo.ProviderID,
 				Cids:                 []cid.ContentID{msg.PieceCID},
 				Price:                offerInfo.Price,

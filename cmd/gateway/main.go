@@ -28,7 +28,7 @@ func main() {
 	url := settings.RegisterAPIURL + "/registers/gateway"
 	gateway.Registration(url, settings)
 
-	_, err := clientapi.StartClientRestAPI(settings)
+	err := clientapi.StartClientRestAPI(settings)
 	if err != nil {
 		logging.Error("Error starting server: Client REST API: %s", err.Error())
 		return

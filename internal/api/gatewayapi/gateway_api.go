@@ -33,6 +33,7 @@ func StartGatewayAPI(settings settings.AppSettings) error {
 		}
 	}(ln)
 	logging.Info("Listening on %s for connections from Gateways", settings.BindGatewayAPI)
+
 	return nil
 }
 

@@ -42,6 +42,13 @@ const settingsDefaultPrivateKey = "01"
 const settingsDefaultPrivKeyVer = 0xff
 const settingsDefaultPrivKeySigAlg = 0xff
 
+const settingsDefaultRegisterAPIURL = "http://localhost:8080"
+const settingsDefaultGatewayAddress = "f0121345"
+const settingsDefaultGatewayNetworkInfo = "127.0.0.1:8090"
+const settingsDefaultGatewayRegionCode = "US"
+const settingsDefaultGatewayRootSigningKey = "0xABCDE123456789"
+const settingsDefaultGatewaySigningKey = "0x987654321EDCBA"
+
 // DefaultTCPInactivityTimeout is the default timeout for TCP inactivity
 const DefaultTCPInactivityTimeout = 100 * time.Millisecond
 
@@ -50,22 +57,29 @@ const DefaultLongTCPInactivityTimeout = 5000 * time.Millisecond
 
 // AppSettings defines the server configuraiton
 type AppSettings struct {
-	BindRestAPI     			string `mapstructure:"BIND_REST_API"`     		// Port number to bind to for client REST API.
-	BindProviderAPI 			string `mapstructure:"BIND_PROVIDER_API"` 		// Port number to bind to for provider TCP communication API.
-	BindGatewayAPI  			string `mapstructure:"BIND_GATEWAY_API"`  		// Port number to bind to for gateway TCP communication API.
-	BindAdminAPI          string `mapstructure:"BIND_ADMIN_API"`    		// Port number to bind to for admin TCP communication API.
-	LogLevel        			string `mapstructure:"LOG_LEVEL"`        			// Log Level: NONE, ERROR, WARN, INFO, TRACE
-	LogTarget       			string `mapstructure:"LOG_TARGET"`       			// Log Level: STDOUT
-	LogDir       					string `mapstructure:"LOG_DIR"`       				// Log Dir: /var/log/fc-retrieval/fc-retrieval-gateway
-	LogFile       				string `mapstructure:"LOG_FILE"`       				// Log File: gateway.log
-	LogMaxBackups       	int 	 `mapstructure:"LOG_MAX_BACKUPS"`       // Log max backups: 3
-	LogMaxAge       			int 	 `mapstructure:"LOG_MAX_AGE"`       		// Log max age (days): 28
-	LogMaxSize       			int 	 `mapstructure:"LOG_MAX_SIZE"`       		// Log max size (MB): 500
-	LogCompress       		bool 	 `mapstructure:"LOG_COMPRESS"`       		// Log compress: false
-	GatewayID       			string `mapstructure:"GATEWAY_ID"`       			// Node id of this gateway
-	GatewayPrivKey  			string `mapstructure:"GATEWAY_PRIVATE_KEY"`		// Gateway private key
-	GatewayKeyVersion 		uint32 `mapstructure:"GATEWAY_KEY_VERSION"`   // Key version of gateway private key
-	GatewaySigAlg   			uint8  `mapstructure:"GATEWAY_SIG_ALG"`       // Signature algorithm to be used by private key.
+	BindRestAPI       string `mapstructure:"BIND_REST_API"`       // Port number to bind to for client REST API.
+	BindProviderAPI   string `mapstructure:"BIND_PROVIDER_API"`   // Port number to bind to for provider TCP communication API.
+	BindGatewayAPI    string `mapstructure:"BIND_GATEWAY_API"`    // Port number to bind to for gateway TCP communication API.
+	BindAdminAPI      string `mapstructure:"BIND_ADMIN_API"`      // Port number to bind to for admin TCP communication API.
+	LogLevel          string `mapstructure:"LOG_LEVEL"`           // Log Level: NONE, ERROR, WARN, INFO, TRACE
+	LogTarget         string `mapstructure:"LOG_TARGET"`          // Log Level: STDOUT
+	LogDir            string `mapstructure:"LOG_DIR"`             // Log Dir: /var/log/fc-retrieval/fc-retrieval-gateway
+	LogFile           string `mapstructure:"LOG_FILE"`            // Log File: gateway.log
+	LogMaxBackups     int    `mapstructure:"LOG_MAX_BACKUPS"`     // Log max backups: 3
+	LogMaxAge         int    `mapstructure:"LOG_MAX_AGE"`         // Log max age (days): 28
+	LogMaxSize        int    `mapstructure:"LOG_MAX_SIZE"`        // Log max size (MB): 500
+	LogCompress       bool   `mapstructure:"LOG_COMPRESS"`        // Log compress: false
+	GatewayID         string `mapstructure:"GATEWAY_ID"`          // Node id of this gateway
+	GatewayPrivKey    string `mapstructure:"GATEWAY_PRIVATE_KEY"` // Gateway private key
+	GatewayKeyVersion uint32 `mapstructure:"GATEWAY_KEY_VERSION"` // Key version of gateway private key
+	GatewaySigAlg     uint8  `mapstructure:"GATEWAY_SIG_ALG"`     // Signature algorithm to be used by private key.
+
+	RegisterAPIURL        string `mapstructure:"REGISTER_API_URL"`         // Register service url
+	GatewayAddress        string `mapstructure:"GATEWAY_ADDRESS"`          // Gateway address
+	GatewayNetworkInfo    string `mapstructure:"GATEWAY_NETWORK_INFO"`     // Gateway network info
+	GatewayRegionCode     string `mapstructure:"GATEWAY_REGION_CODE"`      // Gateway region code
+	GatewayRootSigningKey string `mapstructure:"GATEWAY_ROOT_SIGNING_KEY"` // Gateway root signing key
+	GatewaySigningKey     string `mapstructure:"GATEWAY_SIGNING_KEY"`      // Gateway signing key
 }
 
 var defaults = AppSettings{
@@ -85,4 +99,11 @@ var defaults = AppSettings{
 	settingsDefaultPrivateKey,
 	settingsDefaultPrivKeyVer,
 	settingsDefaultPrivKeySigAlg,
+
+	settingsDefaultRegisterAPIURL,
+	settingsDefaultGatewayAddress,
+	settingsDefaultGatewayNetworkInfo,
+	settingsDefaultGatewayRegionCode,
+	settingsDefaultGatewayRootSigningKey,
+	settingsDefaultGatewaySigningKey,
 }

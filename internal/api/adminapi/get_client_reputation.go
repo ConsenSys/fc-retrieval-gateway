@@ -16,44 +16,33 @@ package adminapi
  */
 
 import (
-	"encoding/json"
 	"net"
-	"strconv"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
-func handleAdminGetReputationChallenge(conn net.Conn, request *messages.AdminGetReputationChallenge) error {
+func handleAdminGetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMessage) error {
 
 	logging.Info("In handleAdminGetReputationChallenge")
 
-	// Get gateway core struct
-	gw := gateway.GetSingleInstance()
-	clientID := request.ClientID
-
-	// Construct response
-	response := messages.AdminGetReputationResponse{
-		MessageType:     messages.AdminGetReputationResponseType,
-		ProtocolVersion: gw.ProtocolVersion,
-		ClientID:        request.ClientID}
-
-	rep := reputation.GetSingleInstance()
-	id, err := nodeid.NewNodeIDFromString(clientID)
+	clientID, err := fcrmessages.DecodeAdminGetReputationChallenge(request)
 	if err != nil {
-		logging.Info("Cannot find clientID: %s", err)
-		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+		return err
 	}
 
-	response.Reputation, response.Exists = rep.GetClientReputation(id)
+	// Get reputation db
+	rep := reputation.GetSingleInstance()
+	reputation, exists := rep.GetClientReputation(clientID)
+
+	// Construct message
+	response, err := fcrmessages.EncodeAdminGetReputationResponse(clientID, reputation, exists)
+	if err != nil {
+		return err
+	}
 	// Send message
-	data, _ := json.Marshal(response)
-	logging.Info("Admin action: Returned reputation %s for client %s", strconv.FormatInt(response.Reputation, 10), clientID)
-	return tcpcomms.SendTCPMessage(conn, messages.AdminGetReputationResponseType, data, settings.DefaultTCPInactivityTimeout)
+	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

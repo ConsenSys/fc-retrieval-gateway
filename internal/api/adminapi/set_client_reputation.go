@@ -16,62 +16,41 @@ package adminapi
  */
 
 import (
-	"encoding/json"
-	"math/big"
 	"net"
-	"strconv"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
-func handleAdminSetReputationChallenge(conn net.Conn, request *messages.AdminSetReputationChallenge) error {
+func handleAdminSetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMessage) error {
 
 	logging.Info("In handleAdminSetReputationChallenge")
 
-	// Get gateway core struct
-	gw := gateway.GetSingleInstance()
-	clientID := request.ClientID
-	clientrep := request.Reputation
+	clientID, reputataion, err := fcrmessages.DecodeAdminSetReputationChallenge(request)
+	if err != nil {
+		return err
+	}
 
-	// Construct response
-	response := messages.AdminGetReputationResponse{
-		MessageType:     messages.AdminSetReputationResponseType,
-		ProtocolVersion: gw.ProtocolVersion,
-		ClientID:        request.ClientID}
-
+	// Get reputation db
 	rep := reputation.GetSingleInstance()
-	clientIDInt64, err := strconv.ParseInt(clientID, 10, 64)
+	exists := rep.ClientExists(clientID)
+	var currentRep int64 = 0
+
+	if exists {
+		rep.SetClientReputation(clientID, reputataion)
+		currentRep = reputataion
+	}
+
+	// Construct messaqe
+	response, err := fcrmessages.EncodeAdminSetReputationResponse(clientID, currentRep, exists)
 	if err != nil {
-		logging.Info("Cannot parse clientID %s into an int64.", clientID)
-		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+		return err
 	}
 
-	clientIDBigInt := big.NewInt(clientIDInt64)
-	node, err := nodeid.NewNodeID(clientIDBigInt)
-	if err != nil {
-		logging.Info("Cannot parse clientID %s into a nodeID.", clientID)
-		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
-	}
-	exists := rep.ClientExists(node)
-	if !exists {
-		logging.Info("Cannot find clientID: %s does not exist.", clientID)
-		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
-	}
-
-	// Set reputation
-	rep.SetClientReputation(node, clientrep)
-
+	logging.Info("Admin action: Set reputation %d for client %s", currentRep, clientID)
 	// Send message
-	data, _ := json.Marshal(response)
-	logging.Info("Admin action: Set reputation %s for client %s", strconv.FormatInt(response.Reputation, 10), clientID)
-	return tcpcomms.SendTCPMessage(conn, messages.AdminSetReputationResponseType, data, settings.DefaultTCPInactivityTimeout)
+	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

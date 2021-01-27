@@ -16,14 +16,14 @@ package adminapi
  */
 
 import (
-	"encoding/json"
 	"net"
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/messages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
@@ -31,7 +31,7 @@ import (
 // StartAdminAPI starts the TCP API as a separate go routine.
 func StartAdminAPI(settings settings.AppSettings, g *gateway.Gateway) error {
 	// Start server
-	ln, err := net.Listen("tcp", ":" + settings.BindAdminAPI)
+	ln, err := net.Listen("tcp", ":"+settings.BindAdminAPI)
 	if err != nil {
 		return err
 	}
@@ -56,38 +56,30 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 
 	// Loop until error occurs and connection is dropped.
 	for {
-		msgType, data, err := tcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
-		if err != nil && !tcpcomms.IsTimeoutError(err) {
+		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.DefaultTCPInactivityTimeout)
+		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 			// Error in tcp communication, drop the connection.
 			logging.Error1(err)
 			return
 		}
 		// Respond to requests for a client's reputation.
 		if err == nil {
-			if msgType == messages.AdminGetReputationChallengeType {
-				request := messages.AdminGetReputationChallenge{}
-				if json.Unmarshal(data, &request) == nil {
-					// Message is valid.
-					err = handleAdminGetReputationChallenge(conn, &request)
-					if err != nil && !tcpcomms.IsTimeoutError(err) {
-						// Error in tcp communication, drop the connection.
-						logging.Error1(err)
-						return
-					}
-					continue
+			if message.MessageType == fcrmessages.AdminGetReputationChallengeType {
+				err = handleAdminGetReputationChallenge(conn, message)
+				if err != nil && !tcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection.
+					logging.Error1(err)
+					return
 				}
-			} else if msgType == messages.AdminSetReputationChallengeType {
-				request := messages.AdminSetReputationChallenge{}
-				if json.Unmarshal(data, &request) == nil {
-					// Message is valid.
-					err = handleAdminSetReputationChallenge(conn, &request)
-					if err != nil && !tcpcomms.IsTimeoutError(err) {
-						// Error in tcp communication, drop the connection.
-						logging.Error1(err)
-						return
-					}
-					continue
+				continue
+			} else if message.MessageType == fcrmessages.AdminSetReputationChallengeType {
+				err = handleAdminSetReputationChallenge(conn, message)
+				if err != nil && !tcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection.
+					logging.Error1(err)
+					return
 				}
+				continue
 			}
 		}
 
@@ -111,7 +103,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 		*/
 
 		// Message is invalid.
-		tcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout, "Message is invalid.")
+		fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
 	}
 }
 
@@ -119,7 +111,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 // It will reuse any active connection.
 func GetConnForRequestingAdminClient(gatewayID nodeid.NodeID, g *gateway.Gateway) (*gateway.CommunicationChannel, error) {
 	// Check if there is an active connection.
-	g.ActiveGatewaysLock.RLock() // TODO: Check this
+	g.ActiveGatewaysLock.RLock() // TODO: Check this - Will need to add active admin connections to core structure
 	gComm := g.ActiveGateways[gatewayID.ToString()]
 	g.ActiveGatewaysLock.RUnlock()
 	if gComm == nil {

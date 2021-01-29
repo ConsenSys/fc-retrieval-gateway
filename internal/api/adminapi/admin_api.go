@@ -25,7 +25,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/tcpcomms"
 )
 
 // StartAdminAPI starts the TCP API as a separate go routine.
@@ -66,7 +65,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 		if err == nil {
 			if message.MessageType == fcrmessages.AdminGetReputationChallengeType {
 				err = handleAdminGetReputationChallenge(conn, message)
-				if err != nil && !tcpcomms.IsTimeoutError(err) {
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection.
 					logging.Error1(err)
 					return
@@ -74,7 +73,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 				continue
 			} else if message.MessageType == fcrmessages.AdminSetReputationChallengeType {
 				err = handleAdminSetReputationChallenge(conn, message)
-				if err != nil && !tcpcomms.IsTimeoutError(err) {
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection.
 					logging.Error1(err)
 					return

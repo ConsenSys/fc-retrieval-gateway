@@ -37,7 +37,7 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 		}
 	}
 	// Sign the message
-	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, request.MessageBody)
+	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, request)
 	if err != nil {
 		// Ignored.
 		logging.Error("Error in signing message.")

@@ -38,12 +38,12 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *fcrmessages.FCRMess
 	}
 
 	// Sign the message
-	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response.MessageBody)
+	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response)
 	if err != nil {
 		// Ignored.
 		logging.Error("Error in signing message.")
 	}
-	response.Signature = sig
+	response.SetSignature(sig)
 	// Send message
 	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

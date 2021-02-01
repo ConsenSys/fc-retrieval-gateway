@@ -22,6 +22,7 @@ import (
 	"math/big"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/cbergoon/merkletree"
 )
 
 const wordSize = 32 // 32 bytes
@@ -89,4 +90,14 @@ func (n *ContentID) UnmarshalJSON(p []byte) error {
 	n.id = make([]byte, wordSize)
 	copy(n.id, id)
 	return nil
+}
+
+//CalculateHash hashes the values of a TestContent
+func (n *ContentID) CalculateHash() ([]byte, error) {
+	return n.id, nil
+}
+
+//Equals tests for equality of two Contents
+func (n *ContentID) Equals(other merkletree.Content) (bool, error) {
+	return n.ToString() == other.(*ContentID).ToString(), nil
 }

@@ -1,7 +1,6 @@
 package fcrmerkletrie
 
 import (
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/cbergoon/merkletree"
 )
 
@@ -11,13 +10,8 @@ type FCRMerkleTrie struct {
 }
 
 // CreateMerkleTrie creates a merkle trie from a list of cids
-func CreateMerkleTrie(cids []cid.ContentID) (*FCRMerkleTrie, error) {
-	size := len(cids)
-	list := make([]merkletree.Content, size)
-	for i := 0; i < size; i++ {
-		list[i] = &cids[i]
-	}
-	trie, err := merkletree.NewTree(list)
+func CreateMerkleTrie(contents []merkletree.Content) (*FCRMerkleTrie, error) {
+	trie, err := merkletree.NewTree(contents)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +24,8 @@ func (mt *FCRMerkleTrie) GetMerkleRoot() string {
 }
 
 // GenerateMerkleProof gets the merkle proof for a given cid
-func (mt *FCRMerkleTrie) GenerateMerkleProof(cid *cid.ContentID) (*FCRMerkleProof, error) {
-	path, index, err := mt.trie.GetMerklePath(cid)
+func (mt *FCRMerkleTrie) GenerateMerkleProof(content merkletree.Content) (*FCRMerkleProof, error) {
+	path, index, err := mt.trie.GetMerklePath(content)
 	if err != nil {
 		return nil, err
 	}

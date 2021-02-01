@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
+	"github.com/cbergoon/merkletree"
 )
 
 // FCRMerkleProof is the proof of a single cid in a merkle trie
@@ -15,9 +15,9 @@ type FCRMerkleProof struct {
 	index []int64
 }
 
-// VerifyCID is used to verify a given cid and a given root matches the proof
-func (mp *FCRMerkleProof) VerifyCID(cid *cid.ContentID, root string) bool {
-	currentHash, _ := cid.CalculateHash()
+// VerifyContent is used to verify a given content and a given root matches the proof
+func (mp *FCRMerkleProof) VerifyContent(content merkletree.Content, root string) bool {
+	currentHash, _ := content.CalculateHash()
 	for i, path := range mp.path {
 		hashFunc := sha256.New()
 		if mp.index[i] == 1 {

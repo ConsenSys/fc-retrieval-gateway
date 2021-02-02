@@ -55,7 +55,7 @@ func (fcrMsg *FCRMessage) VerifySignature(verify func(sig string, msg interface{
 	return res, nil
 }
 
-// SignMessage is used to sign the signature
+// SignMessage is used to sign the message
 func (fcrMsg *FCRMessage) SignMessage(sign func(msg interface{}) (string, error)) error {
 	sig, err := sign(fcrMsg)
 	if err != nil {

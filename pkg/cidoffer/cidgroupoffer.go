@@ -122,3 +122,27 @@ func (c *CidGroupOffer) HasExpired() bool {
 	now := time.Now()
 	return expiryTime.Before(now)
 }
+
+// VerifySignature is used to verify the signature
+func (c *CidGroupOffer) VerifySignature(verify func(sig string, msg interface{}) (bool, error)) (bool, error) {
+	// Clear signature
+	sig := c.Signature
+	c.Signature = ""
+	res, err := verify(sig, c)
+	if err != nil {
+		return false, err
+	}
+	// Recover signature
+	c.Signature = sig
+	return res, nil
+}
+
+// SignOffer is used to sign the offer
+func (c *CidGroupOffer) SignOffer(sign func(msg interface{}) (string, error)) error {
+	sig, err := sign(c)
+	if err != nil {
+		return err
+	}
+	c.Signature = sig
+	return nil
+}

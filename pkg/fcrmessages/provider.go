@@ -17,24 +17,22 @@ type ProviderPublishGroupCIDRequest struct {
 	Expiry     int64           `json:"expiry_date"`
 	QoS        uint64          `json:"qos"`
 	PieceCIDs  []cid.ContentID `json:"piece_cids"`
+	Signature  string          `json:"signature"`
 }
 
 // EncodeProviderPublishGroupCIDRequest is used to get the FCRMessage of ProviderPublishGroupCIDRequest
 func EncodeProviderPublishGroupCIDRequest(
 	nonce int64,
-	providerID *nodeid.NodeID,
-	price uint64,
-	expiry int64,
-	qos uint64,
-	pieceCIDs []cid.ContentID,
+	offer *cidoffer.CidGroupOffer,
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(ProviderPublishGroupCIDRequest{
 		Nonce:      nonce,
-		ProviderID: *providerID,
-		Price:      price,
-		Expiry:     expiry,
-		QoS:        qos,
-		PieceCIDs:  pieceCIDs,
+		ProviderID: *offer.NodeID,
+		Price:      offer.Price,
+		Expiry:     offer.Expiry,
+		QoS:        offer.QoS,
+		PieceCIDs:  offer.Cids,
+		Signature:  offer.Signature,
 	})
 	if err != nil {
 		return nil, err
@@ -50,22 +48,29 @@ func EncodeProviderPublishGroupCIDRequest(
 // DecodeProviderPublishGroupCIDRequest is used to get the fields from FCRMessage of ProviderPublishGroupCIDRequest
 func DecodeProviderPublishGroupCIDRequest(fcrMsg *FCRMessage) (
 	int64, // nonce
-	*nodeid.NodeID, // provider id
-	uint64, // price
-	int64, // expiry
-	uint64, // qos
-	[]cid.ContentID, // piece cids
+	*cidoffer.CidGroupOffer, // offer
 	error, // error
 ) {
 	if fcrMsg.MessageType != ProviderPublishGroupCIDRequestType {
-		return 0, nil, 0, 0, 0, nil, fmt.Errorf("Message type mismatch")
+		return 0, nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := ProviderPublishGroupCIDRequest{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return 0, nil, 0, 0, 0, nil, err
+		return 0, nil, err
 	}
-	return msg.Nonce, &msg.ProviderID, msg.Price, msg.Expiry, msg.QoS, msg.PieceCIDs, nil
+	offer, err := cidoffer.NewCidGroupOffer(
+		&msg.ProviderID,
+		&msg.PieceCIDs,
+		msg.Price,
+		msg.Expiry,
+		msg.QoS)
+	if err != nil {
+		return 0, nil, err
+	}
+	// Set signature
+	offer.Signature = msg.Signature
+	return msg.Nonce, offer, nil
 }
 
 // ProviderDHTPublishGroupCIDRequest is the request from provider to gateway to publish group cid offer using DHT
@@ -77,8 +82,8 @@ type ProviderDHTPublishGroupCIDRequest struct {
 		Price     uint64        `json:"price_per_byte"`
 		Expiry    int64         `json:"expiry_date"`
 		QoS       uint64        `json:"qos"`
-		Signature string        `json:"signature"`
 		PieceCID  cid.ContentID `json:"piece_cid"`
+		Signature string        `json:"signature"`
 	} `json:"single_cid_offers"`
 }
 
@@ -86,14 +91,14 @@ type ProviderDHTPublishGroupCIDRequest struct {
 func EncodeProviderDHTPublishGroupCIDRequest(
 	nonce int64,
 	providerID *nodeid.NodeID,
-	offers []cidoffer.CidGroupOffer, // TODO: Is this appropriate? Using group cid to represent single cid
+	offers []cidoffer.CidGroupOffer,
 ) (*FCRMessage, error) {
 	singleCIDOffers := make([]struct {
 		Price     uint64        `json:"price_per_byte"`
 		Expiry    int64         `json:"expiry_date"`
 		QoS       uint64        `json:"qos"`
-		Signature string        `json:"signature"`
 		PieceCID  cid.ContentID `json:"piece_cid"`
+		Signature string        `json:"signature"`
 	}, len(offers))
 	for i, offer := range offers {
 		singleCIDOffers[i].Price = offer.Price
@@ -123,7 +128,7 @@ func EncodeProviderDHTPublishGroupCIDRequest(
 func DecodeProviderDHTPublishGroupCIDRequest(fcrMsg *FCRMessage) (
 	int64, // nonce
 	*nodeid.NodeID, // provider id
-	[]cidoffer.CidGroupOffer, // offers // TODO: Need to check if this is appropriate
+	[]cidoffer.CidGroupOffer, // offers
 	error, // error
 ) {
 	if fcrMsg.MessageType != ProviderDHTPublishGroupCIDRequestType {
@@ -136,15 +141,17 @@ func DecodeProviderDHTPublishGroupCIDRequest(fcrMsg *FCRMessage) (
 	}
 	offers := make([]cidoffer.CidGroupOffer, msg.NumOffers)
 	for i, singleCIDOffer := range msg.SingleCIDOffers {
-		offers[i].NodeID = &msg.ProviderID
-		offers[i].Cids = []cid.ContentID{singleCIDOffer.PieceCID}
-		offers[i].Price = singleCIDOffer.Price
-		offers[i].Expiry = singleCIDOffer.Expiry
-		offers[i].QoS = singleCIDOffer.QoS
+		offer, err := cidoffer.NewCidGroupOffer(
+			&msg.ProviderID,
+			&[]cid.ContentID{singleCIDOffer.PieceCID},
+			singleCIDOffer.Price,
+			singleCIDOffer.Expiry,
+			singleCIDOffer.QoS)
+		if err != nil {
+			return 0, nil, nil, err
+		}
 		offers[i].Signature = singleCIDOffer.Signature
-		// TODO: What about the rest fields?
-		// offers[i].MerkleProof
-		// offers[i].FundedPaymentChannel
+		offers = append(offers, *offer)
 	}
 	return msg.Nonce, &msg.ProviderID, offers, nil
 }

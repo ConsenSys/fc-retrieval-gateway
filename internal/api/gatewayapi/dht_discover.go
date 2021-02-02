@@ -8,6 +8,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
@@ -31,8 +32,23 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *fcrmessages.FCRMess
 	g := gateway.GetSingleInstance()
 	offers, exists := g.Offers.GetOffers(pieceCID)
 
+	roots := make([]string, 0)
+	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	fundedPaymentChannel := make([]bool, 0)
+
+	for _, offer := range offers {
+		trie := offer.GetMerkleTrie()
+		roots = append(roots, trie.GetMerkleRoot())
+		proof, err := trie.GenerateMerkleProof(pieceCID)
+		if err != nil {
+			return err
+		}
+		proofs = append(proofs, *proof)
+		fundedPaymentChannel = append(fundedPaymentChannel, false) // TODO, Need to find a way to check if having payment channel set up for a given provider.
+	}
+
 	// Construct message
-	response, err := fcrmessages.EncodeGatewayDHTDiscoverResponse(pieceCID, nonce, exists, offers)
+	response, err := fcrmessages.EncodeGatewayDHTDiscoverResponse(pieceCID, nonce, exists, offers, roots, proofs, fundedPaymentChannel)
 	if err != nil {
 		return err
 	}

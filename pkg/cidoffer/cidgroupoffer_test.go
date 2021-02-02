@@ -33,7 +33,8 @@ func TestGetPrice(t *testing.T) {
 	cids = append(cids, *aCid)
 	price := uint64(5)
 	expiry := int64(10)
-	c, cidgerr := NewCidGroupOffer(aNodeID, &cids, price, expiry)
+	qos := uint64(5)
+	c, cidgerr := NewCidGroupOffer(aNodeID, &cids, price, expiry, qos)
 	if ciderr != nil {
 		t.Errorf("Error returned by NewContentID: %e", err)
 	}

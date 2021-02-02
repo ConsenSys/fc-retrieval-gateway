@@ -188,7 +188,8 @@ func createCidGroupOffer(t *testing.T, cids []cid.ContentID, howNew int) *cidoff
 	default:
 		expiry = nowSeconds + 1000
 	}
-	c, err := cidoffer.NewCidGroupOffer(aNodeID, &cids, price, expiry)
+	qos := uint64(5)
+	c, err := cidoffer.NewCidGroupOffer(aNodeID, &cids, price, expiry, qos)
 	if err != nil {
 		t.Errorf("Error returned by NewCidGroupOffer: %e", err)
 	}

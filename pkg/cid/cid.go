@@ -93,11 +93,11 @@ func (n *ContentID) UnmarshalJSON(p []byte) error {
 }
 
 //CalculateHash hashes the values of a TestContent
-func (n *ContentID) CalculateHash() ([]byte, error) {
+func (n ContentID) CalculateHash() ([]byte, error) {
 	return n.id, nil
 }
 
 //Equals tests for equality of two Contents
-func (n *ContentID) Equals(other merkletree.Content) (bool, error) {
+func (n ContentID) Equals(other merkletree.Content) (bool, error) {
 	return n.ToString() == other.(*ContentID).ToString(), nil
 }

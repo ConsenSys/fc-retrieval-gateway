@@ -8,32 +8,29 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
 // Single instance of the CID Offer system
 var instance = newInstance()
 
-
-
-
 // Offers manages all CID Offers on this gateway.
 type Offers struct {
 	// Map of CIDs to array of CID Group Offer message digests
-	cidMap         map[string][][cidoffer.CidGroupOfferDigestSize]byte
-	cidMapLock   sync.RWMutex
+	cidMap     map[string][][cidoffer.CidGroupOfferDigestSize]byte
+	cidMapLock sync.RWMutex
 	// Map of CID Group Offer message digests to CID Group Offer
-	cidOffers          map[[cidoffer.CidGroupOfferDigestSize]byte]*cidoffer.CidGroupOffer
-	cidOffersLock   sync.RWMutex
+	cidOffers     map[[cidoffer.CidGroupOfferDigestSize]byte]*cidoffer.CidGroupOffer
+	cidOffersLock sync.RWMutex
 	// Linked list of CID Group Offer message digests, in order of expiry time.
-	offerExpiry		*list.List
-	offerExpiryLock  sync.RWMutex
+	offerExpiry     *list.List
+	offerExpiryLock sync.RWMutex
 }
 
 type expiringOffers struct {
-	expiry int64
+	expiry      int64
 	offerDigest *[cidoffer.CidGroupOfferDigestSize]byte
 }
 
@@ -49,7 +46,6 @@ func newInstance() *Offers {
 	return &o
 }
 
-
 // GetSingleInstance is a factory method to get the single instance of the offers
 func GetSingleInstance() *Offers {
 	return instance
@@ -62,7 +58,7 @@ func (o *Offers) Add(newOffer *cidoffer.CidGroupOffer) error {
 	o.cidOffersLock.Lock()
 	_, exists := o.cidOffers[digest]
 	o.cidOffersLock.Unlock()
-	if (exists) {
+	if exists {
 		// Ignore if offer already in the system.
 		return nil
 	}
@@ -99,7 +95,7 @@ func (o *Offers) Add(newOffer *cidoffer.CidGroupOffer) error {
 			added = true
 		}
 	}
-	if (!added) {
+	if !added {
 		o.offerExpiry.PushBack(&newExpOff)
 	}
 	o.offerExpiryLock.Unlock()
@@ -117,7 +113,7 @@ func (o *Offers) GetOffers(cidRequested *cid.ContentID) (cidOffers []*cidoffer.C
 	for _, groupOfferDigest := range groupOfferDigests {
 		setOfOffers = append(setOfOffers[:], o.cidOffers[groupOfferDigest])
 	}
-	
+
 	cidOffers = setOfOffers
 	return
 }
@@ -136,12 +132,12 @@ func (o *Offers) ExpireOffers() {
 		var anOffer *expiringOffers
 		anOffer = e.Value.(*expiringOffers)
 		if unixNow <= anOffer.expiry {
-			break;
+			break
 		}
 		expiredCidGroupDigests = append(expiredCidGroupDigests[:], anOffer.offerDigest)
 		o.offerExpiry.Remove(e)
 	}
-	o.offerExpiryLock.Unlock()	
+	o.offerExpiryLock.Unlock()
 
 	// If any CID Groups have expired, then remove them from the data structures
 	for _, expiredCidGroupDigest := range expiredCidGroupDigests {
@@ -161,8 +157,8 @@ func (o *Offers) ExpireOffers() {
 				}
 			}
 
-			if (len(cidGroupOfferDigests) - 1 > 0) {
-				cidGroupOfferDigests[ofs] = cidGroupOfferDigests[len(cidGroupOfferDigests) - 1] // Copy last element to index ofs
+			if len(cidGroupOfferDigests)-1 > 0 {
+				cidGroupOfferDigests[ofs] = cidGroupOfferDigests[len(cidGroupOfferDigests)-1]  // Copy last element to index ofs
 				o.cidMap[aCid.ToString()] = cidGroupOfferDigests[:len(cidGroupOfferDigests)-1] // Create a slice without the last element
 			} else {
 				delete(o.cidMap, aCid.ToString())

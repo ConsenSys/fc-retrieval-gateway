@@ -22,7 +22,9 @@ import (
 	"time"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
+	"github.com/cbergoon/merkletree"
 )
 
 // CidGroupOfferDigestSize is the size of message digest used for CidGroupOffers
@@ -31,30 +33,39 @@ const CidGroupOfferDigestSize = sha512.Size256
 // CidGroupOffer represents a CID Group Offer. That is, an offer to deliver content
 // for Piece CIDs at a certain price
 type CidGroupOffer struct {
-	NodeID               *nodeid.NodeID
-	Cids                 []cid.ContentID
-	Price                uint64
-	Expiry               int64
-	QoS                  uint64
-	Signature            string
-	MerkleProof          string
-	FundedPaymentChannel bool //TODO: Is this boolean?
+	NodeID     *nodeid.NodeID
+	Cids       []cid.ContentID
+	Price      uint64
+	Expiry     int64
+	QoS        uint64
+	MerkleTrie *fcrmerkletrie.FCRMerkleTrie
+	Signature  string
 }
 
 // NewCidGroupOffer creates an unsigned CID Group Offer.
-func NewCidGroupOffer(providerID *nodeid.NodeID, cids *[]cid.ContentID, price uint64, expiry int64) (*CidGroupOffer, error) {
+func NewCidGroupOffer(providerID *nodeid.NodeID, cids *[]cid.ContentID, price uint64, expiry int64, qos uint64) (*CidGroupOffer, error) {
 	var c = CidGroupOffer{}
 	c.NodeID = providerID
 	if len(*cids) < 1 {
 		return nil, errors.New("CID Group Offer: provide 1 or more CIDs")
 	}
 	c.Cids = *cids
-	if price < 0 {
-		return nil, errors.New("CID Group Offer: price must be greater than or equal to zero")
-	}
 	c.Price = price
 	// TODO check that the expiry is in the future (are there scenarios where an expired offer should be loadable?)
 	c.Expiry = expiry
+	c.QoS = qos
+
+	// Create merkle trie
+	list := make([]merkletree.Content, len(*cids))
+	for i := 0; i < len(*cids); i++ {
+		list[i] = (*cids)[i]
+	}
+	var err error
+	c.MerkleTrie, err = fcrmerkletrie.CreateMerkleTrie(list)
+	if err != nil {
+		return nil, err
+	}
+
 	return &c, nil
 }
 
@@ -71,6 +82,16 @@ func (c *CidGroupOffer) GetPrice() uint64 {
 // GetExpiry returns the expiry time of the offer
 func (c *CidGroupOffer) GetExpiry() int64 {
 	return c.Expiry
+}
+
+// GetQoS returns the qos of the offer
+func (c *CidGroupOffer) GetQoS() uint64 {
+	return c.QoS
+}
+
+// GetMerkleTrie returns the merkle trie of the cids
+func (c *CidGroupOffer) GetMerkleTrie() *fcrmerkletrie.FCRMerkleTrie {
+	return c.MerkleTrie
 }
 
 // GetMessageDigest calculate the message digest of this CID Group Offer.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -160,19 +161,24 @@ func EncodeClientStandardDiscoverResponse(
 	nonce int64,
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
+	roots []string,
+	proofs []fcrmerkletrie.FCRMerkleProof,
+	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
-	cidGroupInfo := make([]CIDGroupInformation, 0)
+	cidGroupInfo := make([]CIDGroupInformation, len(offers))
 	if found {
-		for _, offer := range offers {
-			cidGroupInfo = append(cidGroupInfo, CIDGroupInformation{
+		for i := 0; i < len(offers); i++ {
+			offer := offers[i]
+			cidGroupInfo[i] = CIDGroupInformation{
 				ProviderID:           *offer.NodeID,
 				Price:                offer.Price,
 				Expiry:               offer.Expiry,
 				QoS:                  offer.QoS,
 				Signature:            offer.Signature,
-				MerkleProof:          offer.MerkleProof,
-				FundedPaymentChannel: offer.FundedPaymentChannel,
-			})
+				MerkleRoot:           roots[i],
+				MerkleProof:          proofs[i],
+				FundedPaymentChannel: fundedPaymentChannel[i],
+			}
 		}
 	}
 	body, err := json.Marshal(ClientStandardDiscoverResponse{
@@ -197,33 +203,44 @@ func DecodeClientStandardDiscoverResponse(fcrMsg *FCRMessage) (
 	*cid.ContentID, // piece cid
 	int64, // nonce
 	bool, // found
-	[]*cidoffer.CidGroupOffer, // offers
+	[]cidoffer.CidGroupOffer, // offers
+	[]string, // merkle roots
+	[]fcrmerkletrie.FCRMerkleProof, // merkle proofs
+	[]bool, // fundedPaymentChannel
 	error, // error
 ) {
 	if fcrMsg.MessageType != ClientStandardDiscoverResponseType {
-		return nil, 0, false, nil, fmt.Errorf("Message type mismatch")
+		return nil, 0, false, nil, nil, nil, nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := ClientStandardDiscoverResponse{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return nil, 0, false, nil, err
+		return nil, 0, false, nil, nil, nil, nil, err
 	}
-	offers := make([]*cidoffer.CidGroupOffer, 0)
+	offers := make([]cidoffer.CidGroupOffer, 0)
+	roots := make([]string, 0)
+	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	fundedPaymentChannel := make([]bool, 0)
 	if msg.Found {
 		for _, offerInfo := range msg.CIDGroupInfo {
-			offers = append(offers, &cidoffer.CidGroupOffer{
-				NodeID:               &offerInfo.ProviderID,
-				Cids:                 []cid.ContentID{msg.PieceCID},
-				Price:                offerInfo.Price,
-				Expiry:               offerInfo.Expiry,
-				QoS:                  offerInfo.QoS,
-				Signature:            offerInfo.Signature,
-				MerkleProof:          offerInfo.MerkleProof,
-				FundedPaymentChannel: offerInfo.FundedPaymentChannel,
-			})
+			offer, err := cidoffer.NewCidGroupOffer(
+				&offerInfo.ProviderID,
+				&[]cid.ContentID{msg.PieceCID},
+				offerInfo.Price,
+				offerInfo.Expiry,
+				offerInfo.QoS)
+			if err != nil {
+				return nil, 0, false, nil, nil, nil, nil, err
+			}
+			// Set signature
+			offer.Signature = offerInfo.Signature
+			offers = append(offers, *offer)
+			roots = append(roots, offerInfo.MerkleRoot)
+			proofs = append(proofs, offerInfo.MerkleProof)
+			fundedPaymentChannel = append(fundedPaymentChannel, offerInfo.FundedPaymentChannel)
 		}
 	}
-	return &msg.PieceCID, msg.Nonce, msg.Found, offers, nil
+	return &msg.PieceCID, msg.Nonce, msg.Found, offers, roots, proofs, fundedPaymentChannel, nil
 }
 
 // ClientDHTDiscoverRequest is the request from client to gateway to ask for cid offer using DHT

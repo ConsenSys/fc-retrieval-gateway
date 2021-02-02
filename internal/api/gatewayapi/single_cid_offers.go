@@ -32,6 +32,7 @@ func RequestSingleCIDOffers(cidMin, cidMax *cid.ContentID, providerID *nodeid.No
 		cidMax,
 		g.RegistrationBlockHash,
 		g.RegistrationTransactionReceipt,
+		g.RegistrationMerkleRoot,
 		g.RegistrationMerkleProof,
 	)
 	if err != nil {

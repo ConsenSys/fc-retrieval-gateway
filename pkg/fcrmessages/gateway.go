@@ -6,15 +6,17 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
 )
 
 // GatewaySingleCIDOfferPublishRequest is the request from gateway to provider during start-up asking for cid offers
 type GatewaySingleCIDOfferPublishRequest struct {
-	CIDMin             cid.ContentID `json:"cid_min"`
-	CIDMax             cid.ContentID `json:"cid_max"`
-	BlockHash          string        `json:"block_hash"`
-	TransactionReceipt string        `json:"transaction_receipt"`
-	MerkleProof        string        `json:"merkle_proof"`
+	CIDMin             cid.ContentID                `json:"cid_min"`
+	CIDMax             cid.ContentID                `json:"cid_max"`
+	BlockHash          string                       `json:"block_hash"`
+	TransactionReceipt string                       `json:"transaction_receipt"`
+	MerkleRoot         string                       `json:"merkle_root"`
+	MerkleProof        fcrmerkletrie.FCRMerkleProof `json:"merkle_proof"`
 }
 
 // EncodeGatewaySingleCIDOfferPublishRequest is used to get the FCRMessage of GatewaySingleCIDOfferPublishRequest
@@ -23,14 +25,16 @@ func EncodeGatewaySingleCIDOfferPublishRequest(
 	cidMax *cid.ContentID,
 	blockHash string,
 	transactionReceipt string,
-	merkleProof string,
+	merkleRoot string,
+	merkleProof *fcrmerkletrie.FCRMerkleProof,
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(GatewaySingleCIDOfferPublishRequest{
 		CIDMin:             *cidMin,
 		CIDMax:             *cidMax,
 		BlockHash:          blockHash,
 		TransactionReceipt: transactionReceipt,
-		MerkleProof:        merkleProof,
+		MerkleRoot:         merkleRoot,
+		MerkleProof:        *merkleProof,
 	})
 	if err != nil {
 		return nil, err
@@ -49,18 +53,19 @@ func DecodeGatewaySingleCIDOfferPublishRequest(fcrMsg *FCRMessage) (
 	*cid.ContentID, // cid max
 	string, // block hash
 	string, // transaction receipt
-	string, // merkle proof
+	string, // merkle root
+	*fcrmerkletrie.FCRMerkleProof, // merkle proof
 	error, // error
 ) {
 	if fcrMsg.MessageType != GatewaySingleCIDOfferPublishRequestType {
-		return nil, nil, "", "", "", fmt.Errorf("Message type mismatch")
+		return nil, nil, "", "", "", nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := GatewaySingleCIDOfferPublishRequest{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return nil, nil, "", "", "", err
+		return nil, nil, "", "", "", nil, err
 	}
-	return &msg.CIDMin, &msg.CIDMax, msg.BlockHash, msg.TransactionReceipt, msg.MerkleProof, nil
+	return &msg.CIDMin, &msg.CIDMax, msg.BlockHash, msg.TransactionReceipt, msg.MerkleRoot, &msg.MerkleProof, nil
 }
 
 // GatewaySingleCIDOfferPublishResponse is the repsonse to GatewaySingleCIDOfferPublishRequest
@@ -202,19 +207,24 @@ func EncodeGatewayDHTDiscoverResponse(
 	nonce int64,
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
+	roots []string,
+	proofs []fcrmerkletrie.FCRMerkleProof,
+	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
-	cidGroupInfo := make([]CIDGroupInformation, 0)
+	cidGroupInfo := make([]CIDGroupInformation, len(offers))
 	if found {
-		for _, offer := range offers {
-			cidGroupInfo = append(cidGroupInfo, CIDGroupInformation{
+		for i := 0; i < len(offers); i++ {
+			offer := offers[i]
+			cidGroupInfo[i] = CIDGroupInformation{
 				ProviderID:           *offer.NodeID,
 				Price:                offer.Price,
 				Expiry:               offer.Expiry,
 				QoS:                  offer.QoS,
 				Signature:            offer.Signature,
-				MerkleProof:          offer.MerkleProof,
-				FundedPaymentChannel: offer.FundedPaymentChannel,
-			})
+				MerkleRoot:           roots[i],
+				MerkleProof:          proofs[i],
+				FundedPaymentChannel: fundedPaymentChannel[i],
+			}
 		}
 	}
 	body, err := json.Marshal(GatewayDHTDiscoverResponse{
@@ -240,30 +250,41 @@ func DecodeGatewayDHTDiscoverResponse(fcrMsg *FCRMessage) (
 	int64, // nonce
 	bool, // found
 	[]cidoffer.CidGroupOffer, // offers
+	[]string, // merkle roots
+	[]fcrmerkletrie.FCRMerkleProof, // merkle proofs
+	[]bool, // funded payment channel
 	error, // error
 ) {
 	if fcrMsg.MessageType != GatewayDHTDiscoverResponseType {
-		return nil, 0, false, nil, fmt.Errorf("Message type mimatch")
+		return nil, 0, false, nil, nil, nil, nil, fmt.Errorf("Message type mimatch")
 	}
 	msg := GatewayDHTDiscoverResponse{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return nil, 0, false, nil, err
+		return nil, 0, false, nil, nil, nil, nil, err
 	}
 	offers := make([]cidoffer.CidGroupOffer, 0)
+	roots := make([]string, 0)
+	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	fundedPaymentChannel := make([]bool, 0)
 	if msg.Found {
 		for _, offerInfo := range msg.CIDGroupInfo {
-			offers = append(offers, cidoffer.CidGroupOffer{
-				NodeID:               &offerInfo.ProviderID,
-				Cids:                 []cid.ContentID{msg.PieceCID},
-				Price:                offerInfo.Price,
-				Expiry:               offerInfo.Expiry,
-				QoS:                  offerInfo.QoS,
-				Signature:            offerInfo.Signature,
-				MerkleProof:          offerInfo.MerkleProof,
-				FundedPaymentChannel: offerInfo.FundedPaymentChannel,
-			})
+			offer, err := cidoffer.NewCidGroupOffer(
+				&offerInfo.ProviderID,
+				&[]cid.ContentID{msg.PieceCID},
+				offerInfo.Price,
+				offerInfo.Expiry,
+				offerInfo.QoS)
+			if err != nil {
+				return nil, 0, false, nil, nil, nil, nil, err
+			}
+			// Set signature
+			offer.Signature = offerInfo.Signature
+			offers = append(offers, *offer)
+			roots = append(roots, offerInfo.MerkleRoot)
+			proofs = append(proofs, offerInfo.MerkleProof)
+			fundedPaymentChannel = append(fundedPaymentChannel, offerInfo.FundedPaymentChannel)
 		}
 	}
-	return &msg.PieceCID, msg.Nonce, msg.Found, offers, nil
+	return &msg.PieceCID, msg.Nonce, msg.Found, offers, roots, proofs, fundedPaymentChannel, nil
 }

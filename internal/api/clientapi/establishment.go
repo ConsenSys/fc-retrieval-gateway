@@ -41,17 +41,15 @@ func handleClientNetworkEstablishment(w rest.ResponseWriter, request *fcrmessage
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
+
 	// Sign the message
-	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response)
-	if err != nil {
-		// TODO for the moment just blow up!
-		panic(err)
-		// s := "Client Establishment: Internal error signing."
-		// logging.Error(s + err.Error())
-		// rest.Error(w, s, http.StatusInternalServerError)
-
+	if response.SignMessage(func(msg interface{}) (string, error) {
+		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
+	}) != nil {
+		s := "Internal error."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusInternalServerError)
+		return
 	}
-	response.SetSignature(sig)
-
 	w.WriteJson(response)
 }

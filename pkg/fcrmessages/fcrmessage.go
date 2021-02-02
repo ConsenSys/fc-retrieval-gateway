@@ -41,14 +41,28 @@ func (fcrMsg *FCRMessage) GetMessageBody() []byte {
 	return fcrMsg.MessageBody
 }
 
-// GetSignature is used to get the signature
-func (fcrMsg *FCRMessage) GetSignature() string {
-	return fcrMsg.Signature
+// VerifySignature is used to verify the signature
+func (fcrMsg *FCRMessage) VerifySignature(verify func(sig string, msg interface{}) (bool, error)) (bool, error) {
+	// Clear signature
+	sig := fcrMsg.Signature
+	fcrMsg.Signature = ""
+	res, err := verify(sig, fcrMsg)
+	if err != nil {
+		return false, err
+	}
+	// Recover signature
+	fcrMsg.Signature = sig
+	return res, nil
 }
 
-// SetSignature is used to set the signature
-func (fcrMsg *FCRMessage) SetSignature(signature string) {
-	fcrMsg.Signature = signature
+// SignMessage is used to sign the signature
+func (fcrMsg *FCRMessage) SignMessage(sign func(msg interface{}) (string, error)) error {
+	sig, err := sign(fcrMsg)
+	if err != nil {
+		return err
+	}
+	fcrMsg.Signature = sig
+	return nil
 }
 
 // FCRMsgToBytes converts a FCRMessage to bytes

@@ -63,14 +63,13 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	}
 
 	// Sign the message
-	sig, err := fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, response)
-	if err != nil {
+	if response.SignMessage(func(msg interface{}) (string, error) {
+		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
+	}) != nil {
 		s := "Internal error."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	// Set signature
-	response.SetSignature(sig)
 	w.WriteJson(response)
 }

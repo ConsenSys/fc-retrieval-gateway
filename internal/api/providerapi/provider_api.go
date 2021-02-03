@@ -8,7 +8,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
-	log "github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -23,14 +23,14 @@ func StartProviderAPI(settings settings.AppSettings) error {
 		for {
 			conn, err := ln.Accept()
 			if err != nil {
-				log.Error1(err)
+				logging.Error(err.Error())
 				continue
 			}
-			log.Info("Incoming connection from provider at :%s\n", conn.RemoteAddr())
+			logging.Info("Incoming connection from provider at :%s\n", conn.RemoteAddr())
 			go handleIncomingProviderConnection(conn)
 		}
 	}(ln)
-	log.Info("Listening on %s for connections from Providers\n", settings.BindProviderAPI)
+	logging.Info("Listening on %s for connections from Providers\n", settings.BindProviderAPI)
 	return nil
 }
 
@@ -44,24 +44,19 @@ func handleIncomingProviderConnection(conn net.Conn) {
 
 		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 			// Error in tcp communication, drop the connection.
-			log.Error1(err)
+			logging.Error(err.Error())
 			return
 		}
 		if err == nil {
-			log.Info("Message received: %+v", message)
+			logging.Info("Message received: %+v", message)
 			if message.MessageType == fcrmessages.ProviderPublishGroupCIDRequestType {
-				err = handleProviderPublishGroupCIDRequest(conn, message)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection
-					log.Error1(err)
-					return
-				}
+				handleProviderPublishGroupCIDRequest(message)
 				continue
 			} else if message.MessageType == fcrmessages.ProviderDHTPublishGroupCIDRequestType {
 				err = handleProviderDHTPublishGroupCIDRequest(conn, message)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection
-					log.Error1(err)
+					logging.Error(err.Error())
 					return
 				}
 				continue
@@ -70,7 +65,7 @@ func handleIncomingProviderConnection(conn net.Conn) {
 			err = fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
 			if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 				// Error in tcp communication, drop the connection.
-				log.Error1(err)
+				logging.Error(err.Error())
 				return
 			}
 		}

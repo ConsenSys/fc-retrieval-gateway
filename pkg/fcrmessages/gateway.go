@@ -6,7 +6,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 )
 
 // GatewaySingleCIDOfferPublishRequest is the request from gateway to provider during start-up asking for cid offers
@@ -16,7 +16,7 @@ type GatewaySingleCIDOfferPublishRequest struct {
 	BlockHash          string                       `json:"block_hash"`
 	TransactionReceipt string                       `json:"transaction_receipt"`
 	MerkleRoot         string                       `json:"merkle_root"`
-	MerkleProof        fcrmerkletrie.FCRMerkleProof `json:"merkle_proof"`
+	MerkleProof        fcrmerkletree.FCRMerkleProof `json:"merkle_proof"`
 }
 
 // EncodeGatewaySingleCIDOfferPublishRequest is used to get the FCRMessage of GatewaySingleCIDOfferPublishRequest
@@ -26,7 +26,7 @@ func EncodeGatewaySingleCIDOfferPublishRequest(
 	blockHash string,
 	transactionReceipt string,
 	merkleRoot string,
-	merkleProof *fcrmerkletrie.FCRMerkleProof,
+	merkleProof *fcrmerkletree.FCRMerkleProof,
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(GatewaySingleCIDOfferPublishRequest{
 		CIDMin:             *cidMin,
@@ -54,7 +54,7 @@ func DecodeGatewaySingleCIDOfferPublishRequest(fcrMsg *FCRMessage) (
 	string, // block hash
 	string, // transaction receipt
 	string, // merkle root
-	*fcrmerkletrie.FCRMerkleProof, // merkle proof
+	*fcrmerkletree.FCRMerkleProof, // merkle proof
 	error, // error
 ) {
 	if fcrMsg.MessageType != GatewaySingleCIDOfferPublishRequestType {
@@ -208,7 +208,7 @@ func EncodeGatewayDHTDiscoverResponse(
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
-	proofs []fcrmerkletrie.FCRMerkleProof,
+	proofs []fcrmerkletree.FCRMerkleProof,
 	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, len(offers))
@@ -251,7 +251,7 @@ func DecodeGatewayDHTDiscoverResponse(fcrMsg *FCRMessage) (
 	bool, // found
 	[]cidoffer.CidGroupOffer, // offers
 	[]string, // merkle roots
-	[]fcrmerkletrie.FCRMerkleProof, // merkle proofs
+	[]fcrmerkletree.FCRMerkleProof, // merkle proofs
 	[]bool, // funded payment channel
 	error, // error
 ) {
@@ -265,7 +265,7 @@ func DecodeGatewayDHTDiscoverResponse(fcrMsg *FCRMessage) (
 	}
 	offers := make([]cidoffer.CidGroupOffer, 0)
 	roots := make([]string, 0)
-	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	proofs := make([]fcrmerkletree.FCRMerkleProof, 0)
 	fundedPaymentChannel := make([]bool, 0)
 	if msg.Found {
 		for _, offerInfo := range msg.CIDGroupInfo {

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 	"github.com/cbergoon/merkletree"
 )
@@ -39,7 +39,7 @@ type CidGroupOffer struct {
 	Expiry     int64
 	QoS        uint64
 	MerkleRoot string
-	MerkleTrie *fcrmerkletrie.FCRMerkleTrie
+	MerkleTrie *fcrmerkletree.FCRMerkleTrie
 	Signature  string
 }
 
@@ -56,13 +56,13 @@ func NewCidGroupOffer(providerID *nodeid.NodeID, cids *[]cid.ContentID, price ui
 	c.Expiry = expiry
 	c.QoS = qos
 
-	// Create merkle trie
+	// Create merkle tree
 	list := make([]merkletree.Content, len(*cids))
 	for i := 0; i < len(*cids); i++ {
 		list[i] = (*cids)[i]
 	}
 	var err error
-	c.MerkleTrie, err = fcrmerkletrie.CreateMerkleTrie(list)
+	c.MerkleTrie, err = fcrmerkletree.CreateMerkleTrie(list)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (c *CidGroupOffer) GetQoS() uint64 {
 	return c.QoS
 }
 
-// GetMerkleTrie returns the merkle trie of the cids
-func (c *CidGroupOffer) GetMerkleTrie() *fcrmerkletrie.FCRMerkleTrie {
+// GetMerkleTrie returns the merkle tree of the cids
+func (c *CidGroupOffer) GetMerkleTrie() *fcrmerkletree.FCRMerkleTrie {
 	return c.MerkleTrie
 }
 
@@ -132,10 +132,10 @@ func (c *CidGroupOffer) HasExpired() bool {
 
 // VerifySignature is used to verify the signature
 func (c *CidGroupOffer) VerifySignature(verify func(sig string, msg interface{}) (bool, error)) (bool, error) {
-	// Clear signature and trie
+	// Clear signature and tree
 	sig := c.Signature
 	c.Signature = ""
-	trie := c.MerkleTrie
+	tree := c.MerkleTrie
 	c.MerkleTrie = nil
 
 	// Verify the offer
@@ -143,17 +143,17 @@ func (c *CidGroupOffer) VerifySignature(verify func(sig string, msg interface{})
 	if err != nil {
 		return false, err
 	}
-	// Recover signature and trie
+	// Recover signature and tree
 	c.Signature = sig
-	c.MerkleTrie = trie
+	c.MerkleTrie = tree
 	return res, nil
 }
 
 // SignOffer is used to sign the offer
 func (c *CidGroupOffer) SignOffer(sign func(msg interface{}) (string, error)) error {
-	// Clear signature and trie
+	// Clear signature and tree
 	c.Signature = ""
-	trie := c.MerkleTrie
+	tree := c.MerkleTrie
 	c.MerkleTrie = nil
 
 	// Sign the offer
@@ -163,7 +163,7 @@ func (c *CidGroupOffer) SignOffer(sign func(msg interface{}) (string, error)) er
 	}
 	c.Signature = sig
 
-	// Recover the trie
-	c.MerkleTrie = trie
+	// Recover the tree
+	c.MerkleTrie = tree
 	return nil
 }

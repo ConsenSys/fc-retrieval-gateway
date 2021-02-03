@@ -1,4 +1,4 @@
-package fcrmerkletrie
+package fcrmerkletree
 
 import (
 	"crypto/sha256"
@@ -9,7 +9,7 @@ import (
 	"github.com/cbergoon/merkletree"
 )
 
-// FCRMerkleProof is the proof of a single cid in a merkle trie
+// FCRMerkleProof is the proof of a single cid in a merkle tree
 type FCRMerkleProof struct {
 	path  [][]byte
 	index []int64

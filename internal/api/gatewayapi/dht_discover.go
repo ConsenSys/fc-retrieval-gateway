@@ -8,7 +8,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
@@ -33,7 +33,7 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *fcrmessages.FCRMess
 	offers, exists := g.Offers.GetOffers(pieceCID)
 
 	roots := make([]string, 0)
-	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	proofs := make([]fcrmerkletree.FCRMerkleProof, 0)
 	fundedPaymentChannel := make([]bool, 0)
 
 	for _, offer := range offers {

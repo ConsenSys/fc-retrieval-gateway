@@ -1,7 +1,7 @@
 package fcrmessages
 
 import (
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -57,6 +57,6 @@ type CIDGroupInformation struct {
 	QoS                  uint64                       `json:"qos"`
 	Signature            string                       `json:"signature"`
 	MerkleRoot           string                       `json:"merkle_root"`
-	MerkleProof          fcrmerkletrie.FCRMerkleProof `json:"merkle_proof"`
+	MerkleProof          fcrmerkletree.FCRMerkleProof `json:"merkle_proof"`
 	FundedPaymentChannel bool                         `json:"funded_payment_channel"` // TODO: Is this boolean?
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/offers"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
@@ -85,7 +85,7 @@ type Gateway struct {
 	RegistrationBlockHash          string
 	RegistrationTransactionReceipt string
 	RegistrationMerkleRoot         string
-	RegistrationMerkleProof        *fcrmerkletrie.FCRMerkleProof
+	RegistrationMerkleProof        *fcrmerkletree.FCRMerkleProof
 }
 
 // Single instance of the gateway

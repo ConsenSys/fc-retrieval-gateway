@@ -6,7 +6,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletrie"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -162,7 +162,7 @@ func EncodeClientStandardDiscoverResponse(
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
-	proofs []fcrmerkletrie.FCRMerkleProof,
+	proofs []fcrmerkletree.FCRMerkleProof,
 	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, len(offers))
@@ -205,7 +205,7 @@ func DecodeClientStandardDiscoverResponse(fcrMsg *FCRMessage) (
 	bool, // found
 	[]cidoffer.CidGroupOffer, // offers
 	[]string, // merkle roots
-	[]fcrmerkletrie.FCRMerkleProof, // merkle proofs
+	[]fcrmerkletree.FCRMerkleProof, // merkle proofs
 	[]bool, // fundedPaymentChannel
 	error, // error
 ) {
@@ -219,7 +219,7 @@ func DecodeClientStandardDiscoverResponse(fcrMsg *FCRMessage) (
 	}
 	offers := make([]cidoffer.CidGroupOffer, 0)
 	roots := make([]string, 0)
-	proofs := make([]fcrmerkletrie.FCRMerkleProof, 0)
+	proofs := make([]fcrmerkletree.FCRMerkleProof, 0)
 	fundedPaymentChannel := make([]bool, 0)
 	if msg.Found {
 		for _, offerInfo := range msg.CIDGroupInfo {

@@ -86,7 +86,7 @@ type Gateway struct {
 	RegistrationBlockHash          string
 	RegistrationTransactionReceipt string
 	RegistrationMerkleRoot         string
-	RegistrationMerkleProof        *fcrmerkletrie.FCRMerkleProof
+	RegistrationMerkleProof        *fcrmerkletree.FCRMerkleProof
 
 	// Registered Gateways
 	RegisteredGateways []register.GatewayRegister

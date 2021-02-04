@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  fc-retrieval-gateway:
+    container_name: fc-retrieval-gateway
+    # image: consensys/fc-retrieval-gateway:dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8089:80"
+      - "8090:8090"
+      - "8091:8091"
+      - "8092:8092"
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    environment:
+      - REGISTER_API_URL=http://fc-retrieval-register:80
+    networks:
+      - shared
+    restart: unless-stopped
+
+networks:
+  shared:
+    name: shared
+    external: true

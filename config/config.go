@@ -47,5 +47,9 @@ func Map(conf *viper.Viper) settings.AppSettings {
 		GatewayRegionCode:     conf.GetString("GATEWAY_REGION_CODE"),
 		GatewayRootSigningKey: conf.GetString("GATEWAY_ROOT_SIGNING_KEY"),
 		GatewaySigningKey:     conf.GetString("GATEWAY_SIGNING_KEY"),
+
+		ClientNetworkInfo:   conf.GetString("CLIENT_NETWORK_INFO"),
+		ProviderNetworkInfo: conf.GetString("PROVIDER_NETWORK_INFO"),
+		AdminNetworkInfo:    conf.GetString("ADMIN_NETWORK_INFO"),
 	}
 }

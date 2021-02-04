@@ -44,10 +44,14 @@ const settingsDefaultPrivKeySigAlg = 0xff
 
 const settingsDefaultRegisterAPIURL = "http://localhost:8080"
 const settingsDefaultGatewayAddress = "f0121345"
-const settingsDefaultGatewayNetworkInfo = "127.0.0.1:8090"
+const settingsDefaultGatewayNetworkInfo = "127.0.0.1:8091"
 const settingsDefaultGatewayRegionCode = "US"
 const settingsDefaultGatewayRootSigningKey = "0xABCDE123456789"
 const settingsDefaultGatewaySigningKey = "0x987654321EDCBA"
+
+const settingsDefaultClientNetworkInfo = "127.0.0.1:80"
+const settingsDefaultProviderNetworkInfo = "127.0.0.1:8090"
+const settingsDefaultAdminNetworkInfo = "127.0.0.1:8092"
 
 // DefaultTCPInactivityTimeout is the default timeout for TCP inactivity
 const DefaultTCPInactivityTimeout = 100 * time.Millisecond
@@ -80,6 +84,10 @@ type AppSettings struct {
 	GatewayRegionCode     string `mapstructure:"GATEWAY_REGION_CODE"`      // Gateway region code
 	GatewayRootSigningKey string `mapstructure:"GATEWAY_ROOT_SIGNING_KEY"` // Gateway root signing key
 	GatewaySigningKey     string `mapstructure:"GATEWAY_SIGNING_KEY"`      // Gateway signing key
+
+	ClientNetworkInfo   string `mapstructure:"CLIENT_NETWORK_INFO"`     // Gateway client network info
+	ProviderNetworkInfo	string `mapstructure:"PROVIDER_NETWORK_INFO"`     // Gateway provider network info
+	AdminNetworkInfo    string `mapstructure:"ADMIN_NETWORK_INFO"`     // Gateway admin network info
 }
 
 var defaults = AppSettings{
@@ -106,4 +114,8 @@ var defaults = AppSettings{
 	settingsDefaultGatewayRegionCode,
 	settingsDefaultGatewayRootSigningKey,
 	settingsDefaultGatewaySigningKey,
+
+	settingsDefaultClientNetworkInfo,
+	settingsDefaultProviderNetworkInfo,
+	settingsDefaultAdminNetworkInfo,
 }

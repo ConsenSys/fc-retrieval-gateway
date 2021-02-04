@@ -25,10 +25,17 @@ func main() {
 	g := gateway.GetSingleInstance(&settings)
 
 	// Register Gateway
-	url := settings.RegisterAPIURL + "/registers/gateway"
-	gateway.Registration(url, settings)
+	gateway.Registration(settings)
 
-	err := clientapi.StartClientRestAPI(settings)
+	// Get all registerd Gateways
+	gateways, err := gateway.GetRegisteredGateways(settings)
+	if err != nil {
+		logging.Error("Unable to get registered gateways: %v", err)
+	}
+	g.RegisteredGateways = gateways
+	logging.Info("All registered gateways: %+v", g.RegisteredGateways)
+
+	err = clientapi.StartClientRestAPI(settings)
 	if err != nil {
 		logging.Error("Error starting server: Client REST API: %s", err.Error())
 		return

@@ -31,3 +31,9 @@ cleanoldfile:
 	docker rm -f fc-retrieval-gateway-builder 2> /dev/null || true
 
 .PHONY: release clean build push cleanoldfiles utest
+
+dev:
+	docker-compose -f docker-compose.dev.yml up
+
+build-dev:
+	go build -v cmd/gateway/main.go

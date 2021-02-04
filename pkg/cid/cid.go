@@ -43,7 +43,7 @@ func NewContentID(id *big.Int) (*ContentID, error) {
 		return nil, fmt.Errorf("NodeID: Incorrect size1: %d", l)
 	}
 	idBytes := id.Bytes()
-	n.id = make([]byte, len(idBytes))
+	n.id = make([]byte, wordSize)
 	copy(n.id, idBytes)
 	return &n, nil
 }

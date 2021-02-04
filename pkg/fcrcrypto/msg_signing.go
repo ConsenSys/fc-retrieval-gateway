@@ -27,16 +27,12 @@ import (
  *
  */
 
-
 const (
 	// Offsets within a signature string for SigAlgEcdsaP256Sha512_256
 	sigOfsKeyVersionStart = 0
-	sigOfsKeyVersionEnd = sigOfsKeyVersionStart + lengthOfKeyVersionInBytes
-	sigOfsRawSig = sigOfsKeyVersionEnd
+	sigOfsKeyVersionEnd   = sigOfsKeyVersionStart + lengthOfKeyVersionInBytes
+	sigOfsRawSig          = sigOfsKeyVersionEnd
 )
-
-
-
 
 // SignMessage signs a message using the specified private key.
 // Note that the struct must contain a field "Signature"
@@ -69,15 +65,18 @@ func VerifyMessage(pubKey *KeyPair, signature string, msg interface{}) (bool, er
 	return pubKey.Verify(sigBytes[sigOfsRawSig:], getToBeSigned(msg))
 }
 
-
 func getToBeSigned(msg interface{}) []byte {
-	v := reflect.ValueOf(msg)
+	var v reflect.Value
+	if reflect.ValueOf(msg).Type().Kind() == reflect.Ptr {
+		v = reflect.ValueOf(msg).Elem()
+	} else {
+		v = reflect.ValueOf(msg)
+	}
 
 	var allFields string
-    for i := 0; i < v.NumField(); i++ {
+	for i := 0; i < v.NumField(); i++ {
 		fieldAsString := v.Field(i).String()
 		allFields = allFields + fieldAsString
 	}
 	return []byte(allFields)
 }
-

@@ -48,7 +48,7 @@ func NewNodeID(id *big.Int) (*NodeID, error) {
 		return nil, fmt.Errorf("NodeID: Incorrect size1: %d", l)
 	}
 	idBytes := id.Bytes()
-	n.id = make([]byte, len(idBytes))
+	n.id = make([]byte, wordSize)
 	copy(n.id, idBytes)
 	return &n, nil
 }
@@ -60,13 +60,14 @@ func NewNodeIDFromBytes(id []byte) (*NodeID, error) {
 	if lenID > wordSize {
 		return nil, fmt.Errorf("NodeID: Incorrect size2: %d", lenID)
 	}
-	n.id = make([]byte, lenID)
+	n.id = make([]byte, wordSize)
 	copy(n.id, id)
 	return &n, nil
 }
 
 // NewNodeIDFromString creates a NodeID from a string
 func NewNodeIDFromString(id string) (*NodeID, error) {
+	var n = NodeID{}
 	bytes, err := hex.DecodeString(id)
 	if err != nil {
 		return nil, err
@@ -75,10 +76,9 @@ func NewNodeIDFromString(id string) (*NodeID, error) {
 	if len(bytes) > wordSize {
 		return nil, fmt.Errorf("NodeID: Incorrect size2: %d", len(id))
 	}
-	var n = NodeID{}
-	n.id = bytes
+	n.id = make([]byte, wordSize)
+	copy(n.id, id)
 	return &n, nil
-
 }
 
 // ToString returns a string for the node id.

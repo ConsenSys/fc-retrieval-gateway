@@ -39,8 +39,8 @@ func Map(conf *viper.Viper) settings.AppSettings {
 		LogMaxSize:        conf.GetInt("LOG_MAX_SIZE"),
 		LogCompress:       conf.GetBool("LOG_COMPRESS"),
 		GatewayID:         conf.GetString("GATEWAY_ID"),
-		GatewayPrivKey:    "",
-		GatewayKeyVersion: 0,
+		GatewayPrivKey:    conf.GetString("GATEWAY_PRIVATE_KEY"),
+		GatewayKeyVersion: conf.GetUint32("GATEWAY_KEY_VERSION"),
 		GatewaySigAlg:     parseUint8(conf.GetString("GATEWAY_SIG_ALG")),
 
 		RegisterAPIURL:        conf.GetString("REGISTER_API_URL"),

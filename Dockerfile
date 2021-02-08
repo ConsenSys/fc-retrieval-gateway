@@ -18,4 +18,4 @@ COPY --from=builder /go/bin/gateway /gateway
 # Run the binary when the container starts.
 WORKDIR /
 CMD ["/gateway"]
-EXPOSE 8080
+EXPOSE 9010

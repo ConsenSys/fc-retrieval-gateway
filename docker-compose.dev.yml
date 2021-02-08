@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  fc-retrieval-gateway:
+  gateway:
     container_name: fc-retrieval-gateway
     build:
       context: .
@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
     environment:
-      - REGISTER_API_URL=http://fc-retrieval-register:9020
+      - REGISTER_API_URL=http://register:9020
     networks:
       - shared
     restart: unless-stopped

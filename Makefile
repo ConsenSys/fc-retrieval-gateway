@@ -32,8 +32,9 @@ cleanoldfile:
 
 .PHONY: release clean build push cleanoldfiles utest
 
+# User `make dev arg=--build` to rebuild
 dev:
-	docker-compose -f docker-compose.dev.yml up
+	docker-compose -f docker-compose.dev.yml up $(arg)
 
 build-dev:
 	go build -v cmd/gateway/main.go

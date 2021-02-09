@@ -107,16 +107,16 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		}
 		conf := confs[0]
 
-		gatewayPrivateKey, err := fcrcrypto.DecodePrivateKey(conf.GatewayPrivKey)
-		if err != nil {
-			logging.ErrorAndPanic("Error decoding Gateway Private Key: %s", err)
-		}
+		keylock := sync.RWMutex{}
+		keylock.Lock()
+		gatewayPrivateKey := instance.GatewayPrivateKey
+		gatewayPrivateKeyVersion := instance.GatewayPrivateKeyVersion
+		keylock.Unlock()
+
 		gatewayID, err := nodeid.NewNodeIDFromString(conf.GatewayID)
 		if err != nil {
 			logging.ErrorAndPanic("Error decoding node id: %s", err)
 		}
-
-		gatewayPrivateKeyVersion := fcrcrypto.DecodeKeyVersion(conf.GatewayKeyVersion)
 
 		instance = &Gateway{
 			ProtocolVersion:          protocolVersion,

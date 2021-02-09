@@ -48,6 +48,14 @@ func NewContentID(id *big.Int) (*ContentID, error) {
 	return &n, nil
 }
 
+// NewContentIDFromBytes creates a CID object
+func NewContentIDFromBytes(id []byte) *ContentID {
+	var n = ContentID{}
+	n.id = make([]byte, wordSize)
+	copy(n.id, id)
+	return &n
+}
+
 // NewRandomContentID creates a random content id object
 func NewRandomContentID() (*ContentID, error) {
 	var n = ContentID{}

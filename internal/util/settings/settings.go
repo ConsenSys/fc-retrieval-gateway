@@ -38,8 +38,8 @@ const settingsDefaultLogCompress = false
 
 // TODO id doesn't make sense to have defaults for these values.
 const settingsDefaultGatewayID = "01"
-const settingsDefaultPrivateKey = "01"
-const settingsDefaultPrivKeyVer = 0xff
+const settingsDefaultPrivateKey = "011931227b03383f3f6417aaad6316acb400937f64346f43e3f1b3c80eb29d7447"
+const settingsDefaultPrivKeyVer = 0x00
 const settingsDefaultPrivKeySigAlg = 0xff
 
 const settingsDefaultRegisterAPIURL = "http://localhost:9020"

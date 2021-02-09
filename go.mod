@@ -10,6 +10,7 @@ require (
 	github.com/ipsn/go-secp256k1 v0.0.0-20180726113642-9d62b9f0bc52
 	github.com/joho/godotenv v1.3.0
 	github.com/rs/zerolog v1.20.0
+	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad

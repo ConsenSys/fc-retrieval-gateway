@@ -181,15 +181,11 @@ func DecodeAdminSetReputationResponse(fcrMsg *FCRMessage) (
 	return &msg.ClientID, msg.Reputation, msg.Exists, nil
 }
 
-// TODO DHW: Fix data types
-
 // AdminAcceptKeyChallenge is the request from an admin client to a gateway to generate an initial key pair.
 type AdminAcceptKeyChallenge struct {
 	PrivateKey        string `json:"privatekey"`
 	PrivateKeyVersion uint32 `json:"privatekeyversion"`
 }
-
-// TODO DHW: Fix data types
 
 // EncodeAdminAcceptKeyChallenge is used to get the FCRMessage of AdminAcceptKeysChallenge
 func EncodeAdminAcceptKeyChallenge(
@@ -208,8 +204,6 @@ func EncodeAdminAcceptKeyChallenge(
 		MessageBody:       body,
 	}, nil
 }
-
-// TODO DHW: Fix data types
 
 // DecodeAdminAcceptKeyChallenge is used to get the fields from FCRMessage of AdminAcceptKeysChallenge
 func DecodeAdminAcceptKeyChallenge(fcrMsg *FCRMessage) (string, uint32, error) {

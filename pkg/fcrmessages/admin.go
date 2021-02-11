@@ -191,7 +191,6 @@ type AdminAcceptKeyChallenge struct {
 func EncodeAdminAcceptKeyChallenge(
 	string, // privatekey encoded as a hex string
 	uint32, // privatekeyversion
-	error, // error
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(AdminAcceptKeyChallenge{})
 	if err != nil {

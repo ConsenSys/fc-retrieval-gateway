@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "****************************************"
-echo "*** Push docker image to Docker Hub  ***"
+echo "*** Tag docker image with branch name  ***"
 echo "****************************************"
 
 # Docker image name on docker hub

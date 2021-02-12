@@ -20,16 +20,6 @@ type ProviderPublishGroupCIDRequest struct {
 	Signature  string          `json:"signature"`
 }
 
-// EncodeProviderRegistrationRequest is used to get the FCRMessage of ProviderRegistrationRequest
-func EncodeProviderRegistrationRequest() (*FCRMessage, error) {
-	return &FCRMessage{
-		MessageType:       ProviderAdminRegistrationRequestType,
-		ProtocolVersion:   protocolVersion,
-		ProtocolSupported: protocolSupported,
-		MessageBody:       nil,
-	}, nil
-}
-
 // EncodeProviderPublishGroupCIDRequest is used to get the FCRMessage of ProviderPublishGroupCIDRequest
 func EncodeProviderPublishGroupCIDRequest(
 	nonce int64,

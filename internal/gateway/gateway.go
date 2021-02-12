@@ -107,12 +107,6 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		}
 		conf := confs[0]
 
-		keylock := sync.RWMutex{}
-		keylock.Lock()
-		gatewayPrivateKey := instance.GatewayPrivateKey
-		gatewayPrivateKeyVersion := instance.GatewayPrivateKeyVersion
-		keylock.Unlock()
-
 		gatewayID, err := nodeid.NewNodeIDFromString(conf.GatewayID)
 		if err != nil {
 			logging.ErrorAndPanic("Error decoding node id: %s", err)
@@ -133,8 +127,8 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 			ActiveGatewaysLock:       sync.RWMutex{},
 			ActiveProviders:          make(map[string](*CommunicationChannel)),
 			ActiveProvidersLock:      sync.RWMutex{},
-			GatewayPrivateKey:        gatewayPrivateKey,
-			GatewayPrivateKeyVersion: gatewayPrivateKeyVersion,
+			GatewayPrivateKey:        nil,
+			GatewayPrivateKeyVersion: nil,
 			GatewayID:                gatewayID,
 			Offers:                   offers.GetSingleInstance(),
 			RegistrationBlockHash:    "TODO",

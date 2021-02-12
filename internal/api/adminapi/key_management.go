@@ -45,8 +45,11 @@ func handleAdminAcceptKeysChallenge(conn net.Conn, request *fcrmessages.FCRMessa
 
 	// Install private key into the Gateway
 	g := gateway.GetSingleInstance()
+
+	// TODO need mutex around this! START
 	g.GatewayPrivateKey = privatekey
 	g.GatewayPrivateKeyVersion = privatekeyversion
+	// TODO need mutex around this! END
 
 	// Construct messaqe
 	exists := true

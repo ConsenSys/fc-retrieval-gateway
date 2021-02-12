@@ -38,9 +38,6 @@ const settingsDefaultLogCompress = false
 
 // TODO id doesn't make sense to have defaults for these values.
 const settingsDefaultGatewayID = "01"
-const settingsDefaultPrivateKey = "011931227b03383f3f6417aaad6316acb400937f64346f43e3f1b3c80eb29d7447"
-const settingsDefaultPrivKeyVer = 0x00
-const settingsDefaultPrivKeySigAlg = 0xff
 
 const settingsDefaultRegisterAPIURL = "http://localhost:9020"
 const settingsDefaultGatewayAddress = "f0121345"
@@ -73,9 +70,6 @@ type AppSettings struct {
 	LogMaxSize        int    `mapstructure:"LOG_MAX_SIZE"`        // Log max size (MB): 500
 	LogCompress       bool   `mapstructure:"LOG_COMPRESS"`        // Log compress: false
 	GatewayID         string `mapstructure:"GATEWAY_ID"`          // Node id of this gateway
-	GatewayPrivKey    string `mapstructure:"GATEWAY_PRIVATE_KEY"` // Gateway private key
-	GatewayKeyVersion uint32 `mapstructure:"GATEWAY_KEY_VERSION"` // Key version of gateway private key
-	GatewaySigAlg     uint8  `mapstructure:"GATEWAY_SIG_ALG"`     // Signature algorithm to be used by private key.
 
 	RegisterAPIURL        string `mapstructure:"REGISTER_API_URL"`         // Register service url
 	GatewayAddress        string `mapstructure:"GATEWAY_ADDRESS"`          // Gateway address
@@ -103,9 +97,6 @@ var defaults = AppSettings{
 	settingsDefaultLogMaxSize,
 	settingsDefaultLogCompress,
 	settingsDefaultGatewayID,
-	settingsDefaultPrivateKey,
-	settingsDefaultPrivKeyVer,
-	settingsDefaultPrivKeySigAlg,
 
 	settingsDefaultRegisterAPIURL,
 	settingsDefaultGatewayAddress,

@@ -1,22 +1,22 @@
 version: "3.7"
 
 services:
-  fc-retrieval-gateway:
+  gateway:
     container_name: fc-retrieval-gateway
     build:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8080:8080"
-      - "8081:8081"
-      - "8082:8082"
-      - "8083:8083"
+      - "9010:9010"
+      - "9011:9011"
+      - "9012:9012"
+      - "9013:9013"
     volumes:
       - ./:/app
     env_file:
       - .env
     environment:
-      - REGISTER_API_URL=http://fc-retrieval-register:8090
+      - REGISTER_API_URL=http://register:9020
     networks:
       - shared
     restart: unless-stopped

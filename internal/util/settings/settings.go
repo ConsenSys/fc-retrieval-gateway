@@ -23,10 +23,10 @@ const settingsFileName = "settings.json"
 const settingsLocDev = settingsFileName
 const settingsLocContainer = "/etc/gateway/" + settingsFileName
 
-const settingsDefaultBindRestAPI = "8080"
-const settingsDefaultBindProviderAPI = "8090"
-const settingsDefaultBindGatewayAPI = "8091"
-const settingsDefaultBindAdminAPI = "8092"
+const settingsDefaultBindRestAPI = "9010"
+const settingsDefaultBindProviderAPI = "9011"
+const settingsDefaultBindGatewayAPI = "9012"
+const settingsDefaultBindAdminAPI = "9013"
 const settingsDefaultLogLevel = "TRACE"
 const settingsDefaultLogTarget = "STDOUT"
 const settingsDefaultLogDir = "/var/log/fc-retrieval/fc-retrieval-gateway"
@@ -38,20 +38,19 @@ const settingsDefaultLogCompress = false
 
 // TODO id doesn't make sense to have defaults for these values.
 const settingsDefaultGatewayID = "01"
-const settingsDefaultPrivateKey = "01"
-const settingsDefaultPrivKeyVer = 0xff
+const settingsDefaultPrivateKey = "011931227b03383f3f6417aaad6316acb400937f64346f43e3f1b3c80eb29d7447"
+const settingsDefaultPrivKeyVer = 0x00
 const settingsDefaultPrivKeySigAlg = 0xff
 
-const settingsDefaultRegisterAPIURL = "http://localhost:8080"
+const settingsDefaultRegisterAPIURL = "http://localhost:9020"
 const settingsDefaultGatewayAddress = "f0121345"
-const settingsDefaultGatewayNetworkInfo = "127.0.0.1:8091"
+const settingsDefaultClientNetworkInfo = "127.0.0.1:9010"
+const settingsDefaultProviderNetworkInfo = "127.0.0.1:9011"
+const settingsDefaultGatewayNetworkInfo = "127.0.0.1:9012"
+const settingsDefaultAdminNetworkInfo = "127.0.0.1:9013"
 const settingsDefaultGatewayRegionCode = "US"
 const settingsDefaultGatewayRootSigningKey = "0xABCDE123456789"
 const settingsDefaultGatewaySigningKey = "0x987654321EDCBA"
-
-const settingsDefaultClientNetworkInfo = "127.0.0.1:80"
-const settingsDefaultProviderNetworkInfo = "127.0.0.1:8090"
-const settingsDefaultAdminNetworkInfo = "127.0.0.1:8092"
 
 // DefaultTCPInactivityTimeout is the default timeout for TCP inactivity
 const DefaultTCPInactivityTimeout = 100 * time.Millisecond
@@ -85,9 +84,9 @@ type AppSettings struct {
 	GatewayRootSigningKey string `mapstructure:"GATEWAY_ROOT_SIGNING_KEY"` // Gateway root signing key
 	GatewaySigningKey     string `mapstructure:"GATEWAY_SIGNING_KEY"`      // Gateway signing key
 
-	ClientNetworkInfo   string `mapstructure:"CLIENT_NETWORK_INFO"`     // Gateway client network info
-	ProviderNetworkInfo	string `mapstructure:"PROVIDER_NETWORK_INFO"`     // Gateway provider network info
-	AdminNetworkInfo    string `mapstructure:"ADMIN_NETWORK_INFO"`     // Gateway admin network info
+	ClientNetworkInfo   string `mapstructure:"CLIENT_NETWORK_INFO"`   // Gateway client network info
+	ProviderNetworkInfo string `mapstructure:"PROVIDER_NETWORK_INFO"` // Gateway provider network info
+	AdminNetworkInfo    string `mapstructure:"ADMIN_NETWORK_INFO"`    // Gateway admin network info
 }
 
 var defaults = AppSettings{

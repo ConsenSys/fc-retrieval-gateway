@@ -5,7 +5,7 @@
 VERSION?=dev
 IMAGE?=consensys/fc-retrieval-gateway
 
-release: clean build push
+release: clean build tag
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
@@ -14,6 +14,10 @@ build:
 # push the image to an registry
 push:
 	cd scripts; bash push.sh ${VERSION} ${IMAGE}:${VERSION}
+
+tag:
+	cd scripts; bash tag.sh ${VERSION} ${IMAGE}:${VERSION}
+
 
 utest:
 	go test ./...
@@ -32,8 +36,9 @@ cleanoldfile:
 
 .PHONY: release clean build push cleanoldfiles utest
 
+# User `make dev arg=--build` to rebuild
 dev:
-	docker-compose -f docker-compose.dev.yml up
+	docker-compose -f docker-compose.dev.yml up $(arg)
 
 build-dev:
 	go build -v cmd/gateway/main.go

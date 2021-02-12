@@ -22,6 +22,8 @@ func main() {
 	logging.Init(conf)
 	logging.Info("Filecoin Gateway Start-up: Started")
 
+	logging.Info("Settings: %+v", settings)
+	
 	// Initialise a dummy gateway instance.
 	g := gateway.GetSingleInstance(&settings)
 

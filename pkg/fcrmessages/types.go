@@ -49,6 +49,8 @@ const (
 	AdminSetReputationResponseType              = 203
 	AdminAcceptKeyChallengeType                 = 204
 	AdminAcceptKeyResponseType                  = 205
+	ProviderGetGroupCIDRequestType							= 300
+	ProviderGetGroupCIDResponseType							= 301
 )
 
 // CIDGroupInformation represents a cid group information

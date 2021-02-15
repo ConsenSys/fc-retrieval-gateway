@@ -71,10 +71,8 @@ func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID) (*f
 	g := gateway.GetSingleInstance()
 
 	// Get the connection to the gateway.
-	pComm, err := GetConnForRequestingGateway(gatewayID, g)
+	pComm, err := g.GatewayCommPool.GetConnForRequestingNode(gatewayID, fcrtcpcomms.AccessFromGateway)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterGatewayCommunication(gatewayID)
 		return nil, err
 	}
 	pComm.CommsLock.Lock()
@@ -86,8 +84,7 @@ func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID) (*f
 	}
 	err = fcrtcpcomms.SendTCPMessage(pComm.Conn, request, settings.DefaultTCPInactivityTimeout)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterGatewayCommunication(gatewayID)
+		g.GatewayCommPool.DeregisterNodeCommunication(gatewayID)
 		return nil, err
 	}
 	// Get a response
@@ -96,8 +93,7 @@ func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID) (*f
 		// Timeout can be ignored. Since this message can expire.
 		return nil, nil
 	} else if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterGatewayCommunication(gatewayID)
+		g.GatewayCommPool.DeregisterNodeCommunication(gatewayID)
 		return nil, err
 	}
 	return response, nil

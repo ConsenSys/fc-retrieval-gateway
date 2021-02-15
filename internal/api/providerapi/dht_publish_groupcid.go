@@ -22,18 +22,23 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 	}
 
 	// Get the public key
-	g.ProviderKeyMapLock.RLock()
-	defer g.ProviderKeyMapLock.RUnlock()
-	pubKey, ok := g.ProviderKeyMap[providerID.ToString()]
+	g.RegisteredProvidersMapLock.RLock()
+	defer g.RegisteredProvidersMapLock.RUnlock()
+	provider, ok := g.RegisteredProvidersMap[providerID.ToString()]
 	if !ok {
 		logging.Info("Provider public key not found.")
+		return nil
+	}
+	pubKey, err := provider.GetSigningKey()
+	if err != nil {
+		logging.Info("Fail to get signing key from provider registration info")
 		return nil
 	}
 
 	for _, offer := range offers {
 		// Need to verify the offer one by one
 		ok, err = offer.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-			return fcrcrypto.VerifyMessage(&pubKey, sig, msg)
+			return fcrcrypto.VerifyMessage(pubKey, sig, msg)
 		})
 
 		if err != nil {

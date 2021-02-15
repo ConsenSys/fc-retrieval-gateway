@@ -2,14 +2,11 @@ package providerapi
 
 import (
 	"net"
-	"sync"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
 // StartProviderAPI starts the TCP API as a separate go routine.
@@ -70,30 +67,4 @@ func handleIncomingProviderConnection(conn net.Conn) {
 			}
 		}
 	}
-}
-
-// GetConnForRequestingProvider returns the connection for sending request to a provider with given id.
-// It will reuse any active connection.
-func GetConnForRequestingProvider(providerID *nodeid.NodeID, g *gateway.Gateway) (*gateway.CommunicationChannel, error) {
-	// Check if there is an active connection.
-	g.ActiveProvidersLock.RLock()
-	pComm := g.ActiveProviders[providerID.ToString()]
-	g.ActiveProvidersLock.RUnlock()
-	if pComm == nil {
-		// No active connection, connect to peer.
-		g.ProviderAddressMapLock.RLock()
-		conn, err := net.Dial("tcp", g.ProviderAddressMap[providerID.ToString()])
-		g.ProviderAddressMapLock.RUnlock()
-		if err != nil {
-			return nil, err
-		}
-		pComm = &gateway.CommunicationChannel{
-			CommsLock: sync.RWMutex{},
-			Conn:      conn}
-		if gateway.RegisterProviderCommunication(providerID, pComm) != nil {
-			conn.Close()
-			return nil, err
-		}
-	}
-	return pComm, nil
 }

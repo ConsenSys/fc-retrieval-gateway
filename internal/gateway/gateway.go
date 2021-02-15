@@ -1,40 +1,22 @@
 package gateway
 
 import (
-	"errors"
-	"net"
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/offers"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-register/pkg/register"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/register"
 )
 
 const (
 	protocolVersion   = 1 // Main protocol version
 	protocolSupported = 1 // Alternative protocol version
 )
-
-// CommunicationChannels holds channels necessary to manage the live tcp connection thread
-// CommsLock is used to ensure only one thread can access the tcp connection thread.
-// Send true to InterruptRequestChan to indicate the attempt to interrupt tcp connection thread.
-// When tcp connection thread is ready, it will send true to interruptResponseChan.
-// Send any request in bytes directly to CommsRequestChan.
-// The connection thread will send the response to CommsResponseChan if there’s any response expected.
-// The connection thread will also send any error to the CommsResponseError or nil if the request is successful.
-// Send false to InterruptRequestChan to indicate the attempt to end the interruption.
-
-// CommunicationChannel holds the connection for sending outgoing TCP requests.
-// CommsLock is used to ensure only one thread can access the tcp connection at any time.
-// Conn is the net connection for sending outgoing TCP requests.
-type CommunicationChannel struct {
-	CommsLock sync.RWMutex
-	Conn      net.Conn
-}
 
 // Gateway holds the main data structure for the whole gateway.
 type Gateway struct {
@@ -50,31 +32,19 @@ type Gateway struct {
 	// GatewayPrivateKeyVersion is the key version number of the private key.
 	GatewayPrivateKeyVersion *fcrcrypto.KeyVersion
 
-	// GatewayAddressMap stores mapping from gateway id (big int in string repr) to its address.
-	GatewayAddressMap     map[string](string)
-	GatewayAddressMapLock sync.RWMutex
+	// RegisteredGatewaysMap stores mapping from gateway id (big int in string repr) to its registration info
+	RegisteredGatewaysMap     map[string]register.RegisteredNode
+	RegisteredGatewaysMapLock sync.RWMutex
 
-	// ProviderAddressMap stores mapping from provider id (big int in string repr) to its address.
-	ProviderAddressMap     map[string](string)
-	ProviderAddressMapLock sync.RWMutex
+	// RegisteredProvidersMap stores mapping from provider id (big int in string repr) to its registration info
+	RegisteredProvidersMap     map[string]register.RegisteredNode
+	RegisteredProvidersMapLock sync.RWMutex
 
-	// GatewayKeyMap stores the mapping from gateway id to its public key
-	GatewayKeyMap     map[string](fcrcrypto.KeyPair)
-	GatewayKeyMapLock sync.RWMutex
+	// GatewayCommPool manages connection for outgoing request to gateways
+	GatewayCommPool *fcrtcpcomms.CommunicationPool
 
-	// ProviderKeyMap stores the mapping from provider id to its public key
-	ProviderKeyMap     map[string](fcrcrypto.KeyPair)
-	ProviderKeyMapLock sync.RWMutex
-
-	// ActiveGateways store connected active gateways for outgoing request:
-	// A map from gateway id (big int in string repr) to a CommunicationChannel.
-	ActiveGateways     map[string](*CommunicationChannel)
-	ActiveGatewaysLock sync.RWMutex
-
-	// ActiveProviders store connected active providers for outgoing request:
-	// A map from provider id (big in in string repr) to a CommunicationChannel.
-	ActiveProviders     map[string](*CommunicationChannel)
-	ActiveProvidersLock sync.RWMutex
+	// ProviderCommPool manages connection for outgoing request to providers
+	ProviderCommPool *fcrtcpcomms.CommunicationPool
 
 	// Offers, it is threadsafe.
 	Offers *offers.Offers
@@ -87,9 +57,6 @@ type Gateway struct {
 	RegistrationTransactionReceipt string
 	RegistrationMerkleRoot         string
 	RegistrationMerkleProof        *fcrmerkletree.FCRMerkleProof
-
-	// Registered Gateways
-	RegisteredGateways []register.GatewayRegister
 }
 
 // Single instance of the gateway
@@ -119,84 +86,23 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		gatewayPrivateKeyVersion := fcrcrypto.DecodeKeyVersion(conf.GatewayKeyVersion)
 
 		instance = &Gateway{
-			ProtocolVersion:          protocolVersion,
-			ProtocolSupported:        []int32{protocolVersion, protocolSupported},
-			GatewayAddressMap:        make(map[string](string)),
-			GatewayAddressMapLock:    sync.RWMutex{},
-			ProviderAddressMap:       make(map[string](string)),
-			ProviderAddressMapLock:   sync.RWMutex{},
-			GatewayKeyMap:            make(map[string]fcrcrypto.KeyPair),
-			GatewayKeyMapLock:        sync.RWMutex{},
-			ProviderKeyMap:           make(map[string]fcrcrypto.KeyPair),
-			ProviderKeyMapLock:       sync.RWMutex{},
-			ActiveGateways:           make(map[string](*CommunicationChannel)),
-			ActiveGatewaysLock:       sync.RWMutex{},
-			ActiveProviders:          make(map[string](*CommunicationChannel)),
-			ActiveProvidersLock:      sync.RWMutex{},
-			GatewayPrivateKey:        gatewayPrivateKey,
-			GatewayPrivateKeyVersion: gatewayPrivateKeyVersion,
-			GatewayID:                gatewayID,
-			Offers:                   offers.GetSingleInstance(),
-			RegistrationBlockHash:    "TODO",
+			ProtocolVersion:                protocolVersion,
+			ProtocolSupported:              []int32{protocolVersion, protocolSupported},
+			RegisteredGatewaysMap:          make(map[string]register.RegisteredNode),
+			RegisteredGatewaysMapLock:      sync.RWMutex{},
+			RegisteredProvidersMap:         make(map[string]register.RegisteredNode),
+			RegisteredProvidersMapLock:     sync.RWMutex{},
+			GatewayPrivateKey:              gatewayPrivateKey,
+			GatewayPrivateKeyVersion:       gatewayPrivateKeyVersion,
+			GatewayID:                      gatewayID,
+			Offers:                         offers.GetSingleInstance(),
+			RegistrationBlockHash:          "TODO",
+			RegistrationTransactionReceipt: "TODO",
+			RegistrationMerkleRoot:         "TODO",
+			RegistrationMerkleProof:        nil, //TODO
 		}
+		instance.GatewayCommPool = fcrtcpcomms.NewCommunicationPool(instance.RegisteredGatewaysMap, &instance.RegisteredGatewaysMapLock)
+		instance.ProviderCommPool = fcrtcpcomms.NewCommunicationPool(instance.RegisteredProvidersMap, &instance.RegisteredProvidersMapLock)
 	})
 	return instance
-}
-
-// RegisterGatewayCommunication registers a gateway communication
-func RegisterGatewayCommunication(id *nodeid.NodeID, gComm *CommunicationChannel) error {
-	if instance == nil {
-		return errors.New("Error: instance not created")
-	}
-	instance.ActiveGatewaysLock.Lock()
-	defer instance.ActiveGatewaysLock.Unlock()
-	_, exist := instance.ActiveGateways[id.ToString()]
-	if exist {
-		return errors.New("Error: connection existed")
-	}
-	instance.ActiveGateways[id.ToString()] = gComm
-	return nil
-}
-
-// DeregisterGatewayCommunication deregisters a gateway communication
-// Fail silently
-func DeregisterGatewayCommunication(id *nodeid.NodeID) {
-	if instance != nil {
-		instance.ActiveGatewaysLock.Lock()
-		defer instance.ActiveGatewaysLock.Unlock()
-		_, exist := instance.ActiveGateways[id.ToString()]
-		if exist {
-			delete(instance.ActiveGateways, id.ToString())
-		}
-	}
-}
-
-// RegisterProviderCommunication registers a provider communication
-func RegisterProviderCommunication(id *nodeid.NodeID, pComm *CommunicationChannel) error {
-	if instance == nil {
-		return errors.New("Error: instance not created")
-	}
-	instance.ActiveProvidersLock.Lock()
-	defer instance.ActiveProvidersLock.Unlock()
-	_, exist := instance.ActiveProviders[id.ToString()]
-	if exist {
-		return errors.New("Error: connection existed")
-	}
-	instance.ActiveProviders[id.ToString()] = pComm
-	return nil
-}
-
-// DeregisterProviderCommunication deregisters a provider communication
-func DeregisterProviderCommunication(id *nodeid.NodeID) error {
-	if instance == nil {
-		return errors.New("Error: instance not created")
-	}
-	instance.ActiveProvidersLock.Lock()
-	defer instance.ActiveProvidersLock.Unlock()
-	_, exist := instance.ActiveProviders[id.ToString()]
-	if !exist {
-		return errors.New("Error: connection not existed")
-	}
-	delete(instance.ActiveProviders, id.ToString())
-	return nil
 }

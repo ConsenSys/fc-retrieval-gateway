@@ -20,16 +20,21 @@ func handleProviderPublishGroupCIDRequest(request *fcrmessages.FCRMessage) {
 
 	// Need to verify the offer
 	// Get the public key
-	g.ProviderKeyMapLock.RLock()
-	defer g.ProviderKeyMapLock.RUnlock()
-	pubKey, ok := g.ProviderKeyMap[offer.NodeID.ToString()]
+	g.RegisteredProvidersMapLock.RLock()
+	defer g.RegisteredProvidersMapLock.RUnlock()
+	provider, ok := g.RegisteredProvidersMap[offer.NodeID.ToString()]
 	if !ok {
 		logging.Info("Provider public key not found.")
 		return
 	}
+	pubKey, err := provider.GetSigningKey()
+	if err != nil {
+		logging.Info("Fail to get signing key from provider registration info")
+		return
+	}
 
 	ok, err = offer.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-		return fcrcrypto.VerifyMessage(&pubKey, sig, msg)
+		return fcrcrypto.VerifyMessage(pubKey, sig, msg)
 	})
 
 	// Error in verifying message

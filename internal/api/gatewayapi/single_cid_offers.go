@@ -1,7 +1,6 @@
 package gatewayapi
 
 import (
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/providerapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
@@ -18,10 +17,8 @@ func RequestSingleCIDOffers(cidMin, cidMax *cid.ContentID, providerID *nodeid.No
 	g := gateway.GetSingleInstance()
 
 	// Get the connection to provider.
-	pComm, err := providerapi.GetConnForRequestingProvider(providerID, g)
+	pComm, err := g.ProviderCommPool.GetConnForRequestingNode(providerID, fcrtcpcomms.AccessFromGateway)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterProviderCommunication(providerID)
 		return nil, err
 	}
 	pComm.CommsLock.Lock()
@@ -40,15 +37,13 @@ func RequestSingleCIDOffers(cidMin, cidMax *cid.ContentID, providerID *nodeid.No
 	}
 	err = fcrtcpcomms.SendTCPMessage(pComm.Conn, request, settings.DefaultTCPInactivityTimeout)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterProviderCommunication(providerID)
+		g.ProviderCommPool.DeregisterNodeCommunication(providerID)
 		return nil, err
 	}
 	// Get a response.
 	response, err := fcrtcpcomms.ReadTCPMessage(pComm.Conn, settings.DefaultLongTCPInactivityTimeout)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterProviderCommunication(providerID)
+		g.ProviderCommPool.DeregisterNodeCommunication(providerID)
 		return nil, err
 	}
 	return response, nil
@@ -60,10 +55,9 @@ func AcknowledgeSingleCIDOffers(response *fcrmessages.FCRMessage, providerID *no
 	g := gateway.GetSingleInstance()
 
 	// Get the connection to provider.
-	pComm, err := providerapi.GetConnForRequestingProvider(providerID, g)
+	pComm, err := g.ProviderCommPool.GetConnForRequestingNode(providerID, fcrtcpcomms.AccessFromGateway)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterProviderCommunication(providerID)
+		g.ProviderCommPool.DeregisterNodeCommunication(providerID)
 		return nil, err
 	}
 	pComm.CommsLock.Lock()
@@ -98,8 +92,7 @@ func AcknowledgeSingleCIDOffers(response *fcrmessages.FCRMessage, providerID *no
 	// Send ack
 	err = fcrtcpcomms.SendTCPMessage(pComm.Conn, ack, settings.DefaultTCPInactivityTimeout)
 	if err != nil {
-		pComm.Conn.Close()
-		gateway.DeregisterProviderCommunication(providerID)
+		g.ProviderCommPool.DeregisterNodeCommunication(providerID)
 		return nil, err
 	}
 	// Ack success

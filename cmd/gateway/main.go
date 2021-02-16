@@ -28,7 +28,7 @@ func main() {
 	g := gateway.GetSingleInstance(&settings)
 
 	// Register Gateway
-	gatewayReg := register.RegisteredNode{
+	gatewayReg := register.GatewayRegister{
 		NodeID:              settings.GatewayID,
 		Address:             settings.GatewayAddress,
 		RootSigningKey:      settings.GatewayRootSigningKey,
@@ -49,7 +49,7 @@ func main() {
 	g.RegisteredGatewaysMapLock.Lock()
 	logging.Info("All registered gateways: %+v", gateways)
 	for _, gateway := range gateways {
-		g.RegisteredGatewaysMap[gateway.NodeID] = gateway
+		g.RegisteredGatewaysMap[gateway.NodeID] = &gateway
 	}
 	g.RegisteredGatewaysMapLock.Unlock()
 
@@ -61,7 +61,7 @@ func main() {
 	g.RegisteredProvidersMapLock.Lock()
 	logging.Info("All registered providers: %+v", providers)
 	for _, provider := range providers {
-		g.RegisteredGatewaysMap[provider.NodeID] = provider
+		g.RegisteredGatewaysMap[provider.NodeID] = &provider
 	}
 	g.RegisteredGatewaysMapLock.Unlock()
 

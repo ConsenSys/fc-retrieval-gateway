@@ -9,48 +9,48 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
-// ProviderGetGroupCIDRequest is the requset from client to gateway to ask for cid offer
-type ProviderGetGroupCIDRequest struct {
-	ProviderID	nodeid.NodeID `json:"provider_id"`
+// ProviderAdminGetGroupCIDRequest is the requset from client to gateway to ask for cid offer
+type ProviderAdminGetGroupCIDRequest struct {
+	GatewayID	nodeid.NodeID `json:"gateway_id"`
 }
 
-// EncodeProviderGetGroupCIDRequest is used to get the FCRMessage of ProviderGetGroupCIDRequest
-func EncodeProviderGetGroupCIDRequest(
-	providerID *nodeid.NodeID,
+// EncodeProviderAdminGetGroupCIDRequest is used to get the FCRMessage of ProviderAdminGetGroupCIDRequest
+func EncodeProviderAdminGetGroupCIDRequest(
+	gatewayID *nodeid.NodeID,
 ) (*FCRMessage, error) {
-	body, err := json.Marshal(ProviderGetGroupCIDRequest{
-		ProviderID: *providerID,
+	body, err := json.Marshal(ProviderAdminGetGroupCIDRequest{
+		GatewayID: *gatewayID,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &FCRMessage{
-		MessageType:       ProviderGetGroupCIDRequestType,
+		MessageType:       ProviderAdminGetGroupCIDRequestType,
 		ProtocolVersion:   protocolVersion,
 		ProtocolSupported: protocolSupported,
 		MessageBody:       body,
 	}, nil
 }
 
-// DecodeProviderGetGroupCIDRequest is used to get the fields from FCRMessage of ProviderGetGroupCIDRequest
-func DecodeProviderGetGroupCIDRequest(fcrMsg *FCRMessage) (
+// DecodeProviderAdminGetGroupCIDRequest is used to get the fields from FCRMessage of ProviderAdminGetGroupCIDRequest
+func DecodeProviderAdminGetGroupCIDRequest(fcrMsg *FCRMessage) (
 	*nodeid.NodeID, // piece cid
 	error, // error
 ) {
-	if fcrMsg.MessageType != ProviderGetGroupCIDRequestType {
+	if fcrMsg.MessageType != ProviderAdminGetGroupCIDRequestType {
 		return nil, fmt.Errorf("Message type mismatch")
 	}
-	msg := ProviderGetGroupCIDRequest{}
+	msg := ProviderAdminGetGroupCIDRequest{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
 		return nil, err
 	}
-	return &msg.ProviderID, nil
+	return &msg.GatewayID, nil
 }
 
 // ProviderGetGroupCIDResponse is the response to ProviderGetGroupCIDResponse
 type ProviderGetGroupCIDResponse struct {
-	ProviderID		nodeid.NodeID 				`json:"provider_id"`
+	GatewayID		nodeid.NodeID 				`json:"provider_id"`
 	Found        	bool                  `json:"found"`
 	CIDGroupInfo 	[]CIDGroupInformation `json:"cid_group_information"`
 }
@@ -81,7 +81,7 @@ func EncodeProviderGetGroupCIDResponse(
 		}
 	}
 	body, err := json.Marshal(ProviderGetGroupCIDResponse{
-		ProviderID:   *providerID,
+		GatewayID:   *providerID,
 		Found:        found,
 		CIDGroupInfo: cidGroupInfo,
 	})
@@ -89,7 +89,7 @@ func EncodeProviderGetGroupCIDResponse(
 		return nil, err
 	}
 	return &FCRMessage{
-		MessageType:       ProviderGetGroupCIDResponseType,
+		MessageType:       ProviderAdminGetGroupCIDResponseType,
 		ProtocolVersion:   protocolVersion,
 		ProtocolSupported: protocolSupported,
 		MessageBody:       body,
@@ -103,7 +103,7 @@ func DecodeProviderGetGroupCIDResponse(fcrMsg *FCRMessage) (
 	[]cidoffer.CidGroupOffer, // offers
 	error, // error
 ) {
-	if fcrMsg.MessageType != ProviderGetGroupCIDResponseType {
+	if fcrMsg.MessageType != ProviderAdminGetGroupCIDResponseType {
 		return nil, false, nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := ProviderGetGroupCIDResponse{}
@@ -112,5 +112,5 @@ func DecodeProviderGetGroupCIDResponse(fcrMsg *FCRMessage) (
 		return nil, false, nil, err
 	}
 	offers := make([]cidoffer.CidGroupOffer, 0)
-	return &msg.ProviderID, msg.Found, offers, nil
+	return &msg.GatewayID, msg.Found, offers, nil
 }

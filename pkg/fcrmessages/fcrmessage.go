@@ -93,3 +93,13 @@ func SetProtocolVersion(newProtocolVersion int32, newProtocolSupported []int32) 
 
 // EncodeXX is used to get the FCRMessage of XX
 // DecodeXX is used to get the fields from FCRMessage of XX
+
+// DumpMessage display a message with ASCII and hex
+func (fcrMsg *FCRMessage) DumpMessage() string { 
+	msgBytes, err := FCRMsgToBytes(fcrMsg)
+	if err != nil {
+		return "Error processing message"
+	}
+	return dumpMessage(msgBytes)
+}
+

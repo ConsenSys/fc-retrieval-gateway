@@ -206,7 +206,6 @@ func EncodeAdminAcceptKeyChallenge(
 
 // DecodeAdminAcceptKeyChallenge is used to get the fields from FCRMessage of AdminAcceptKeysChallenge
 func DecodeAdminAcceptKeyChallenge(fcrMsg *FCRMessage) (string, uint32, error) {
-
 	if fcrMsg.MessageType != AdminAcceptKeyChallengeType {
 		return "", 0, fmt.Errorf("Message type mismatch")
 	}
@@ -215,6 +214,13 @@ func DecodeAdminAcceptKeyChallenge(fcrMsg *FCRMessage) (string, uint32, error) {
 	if err != nil {
 		return "", 0, err
 	}
+	if msg.PrivateKey == "" {
+		return "", 0, fmt.Errorf("New Gateway Private Key empty")
+	}
+	if msg.PrivateKeyVersion < 0 {
+		return "", 0, fmt.Errorf("New Gateway Private Key version negative")
+	}
+
 	return msg.PrivateKey, msg.PrivateKeyVersion, nil
 }
 

@@ -48,16 +48,16 @@ func DecodeProviderAdminGetGroupCIDRequest(fcrMsg *FCRMessage) (
 	return &msg.GatewayID, nil
 }
 
-// ProviderGetGroupCIDResponse is the response to ProviderGetGroupCIDResponse
-type ProviderGetGroupCIDResponse struct {
-	GatewayID		nodeid.NodeID 				`json:"provider_id"`
+// ProviderAdminGetGroupCIDResponse is the response to ProviderAdminGetGroupCIDResponse
+type ProviderAdminGetGroupCIDResponse struct {
+	GatewayID			nodeid.NodeID 				`json:"gateway_id"`
 	Found        	bool                  `json:"found"`
 	CIDGroupInfo 	[]CIDGroupInformation `json:"cid_group_information"`
 }
 
-// EncodeProviderGetGroupCIDResponse is used to get the FCRMessage of ProviderGetGroupCIDResponse
-func EncodeProviderGetGroupCIDResponse(
-	providerID *nodeid.NodeID,
+// EncodeProviderAdminGetGroupCIDResponse is used to get the FCRMessage of ProviderAdminGetGroupCIDResponse
+func EncodeProviderAdminGetGroupCIDResponse(
+	gatewayID *nodeid.NodeID,
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
@@ -80,8 +80,8 @@ func EncodeProviderGetGroupCIDResponse(
 			}
 		}
 	}
-	body, err := json.Marshal(ProviderGetGroupCIDResponse{
-		GatewayID:   *providerID,
+	body, err := json.Marshal(ProviderAdminGetGroupCIDResponse{
+		GatewayID:   *gatewayID,
 		Found:        found,
 		CIDGroupInfo: cidGroupInfo,
 	})
@@ -96,9 +96,9 @@ func EncodeProviderGetGroupCIDResponse(
 	}, nil
 }
 
-// DecodeProviderGetGroupCIDResponse is used to get the fields from FCRMessage of ProviderGetGroupCIDResponse
-func DecodeProviderGetGroupCIDResponse(fcrMsg *FCRMessage) (
-	*nodeid.NodeID, // provider id
+// DecodeProviderAdminGetGroupCIDResponse is used to get the fields from FCRMessage of ProviderAdminGetGroupCIDResponse
+func DecodeProviderAdminGetGroupCIDResponse(fcrMsg *FCRMessage) (
+	*nodeid.NodeID, // gatewayID id
 	bool, // found
 	[]cidoffer.CidGroupOffer, // offers
 	error, // error
@@ -106,7 +106,7 @@ func DecodeProviderGetGroupCIDResponse(fcrMsg *FCRMessage) (
 	if fcrMsg.MessageType != ProviderAdminGetGroupCIDResponseType {
 		return nil, false, nil, fmt.Errorf("Message type mismatch")
 	}
-	msg := ProviderGetGroupCIDResponse{}
+	msg := ProviderAdminGetGroupCIDResponse{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
 		return nil, false, nil, err

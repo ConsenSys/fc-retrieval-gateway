@@ -189,8 +189,8 @@ type AdminAcceptKeyChallenge struct {
 
 // EncodeAdminAcceptKeyChallenge is used to get the FCRMessage of AdminAcceptKeysChallenge
 func EncodeAdminAcceptKeyChallenge(
-	string, // privatekey encoded as a hex string
-	uint32, // privatekeyversion
+	privateKey string, // privatekey encoded as a hex string
+	keyVersion uint32, 
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(AdminAcceptKeyChallenge{privateKey, keyVersion})	
 	if err != nil {

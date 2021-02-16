@@ -82,7 +82,7 @@ func NewNodeIDFromString(id string) (*NodeID, error) {
 }
 
 // NewNodeIDFromPublicKey create a Node ID based on a public key.
-func NewNodeIDFromPublicKey(pubKey fcrcrypto.KeyPair) (*NodeID, error) {
+func NewNodeIDFromPublicKey(pubKey *fcrcrypto.KeyPair) (*NodeID, error) {
 	hashedPubKey, err := pubKey.HashPublicKey()
 	if err != nil {
 		return nil, err

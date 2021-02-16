@@ -81,6 +81,16 @@ func NewNodeIDFromString(id string) (*NodeID, error) {
 	return &n, nil
 }
 
+// NewNodeIDFromPublicKey create a Node ID based on a public key.
+func NewNodeIDFromPublicKey(pubKey fcrcrypto.KeyPair) (*NodeID, error) {
+	hashedPubKey, err := pubKey.HashPublicKey()
+	if err != nil {
+		return nil, err
+	}
+	return NewNodeIDFromBytes(hashedPubKey)
+}
+
+
 // ToString returns a string for the node id.
 func (n *NodeID) ToString() string {
 	str := hex.EncodeToString(n.id)

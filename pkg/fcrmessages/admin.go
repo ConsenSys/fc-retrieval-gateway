@@ -192,7 +192,7 @@ func EncodeAdminAcceptKeyChallenge(
 	string, // privatekey encoded as a hex string
 	uint32, // privatekeyversion
 ) (*FCRMessage, error) {
-	body, err := json.Marshal(AdminAcceptKeyChallenge{})
+	body, err := json.Marshal(AdminAcceptKeyChallenge{privateKey, keyVersion})	
 	if err != nil {
 		return nil, err
 	}

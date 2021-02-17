@@ -100,7 +100,7 @@ func EncodeProviderAdminGetGroupCIDResponse(
 func DecodeProviderAdminGetGroupCIDResponse(fcrMsg *FCRMessage) (
 	*nodeid.NodeID, // gatewayID id
 	bool, // found
-	[]cidoffer.CidGroupOffer, // offers
+	[]CIDGroupInformation, // offers
 	error, // error
 ) {
 	if fcrMsg.MessageType != ProviderAdminGetGroupCIDResponseType {
@@ -111,6 +111,5 @@ func DecodeProviderAdminGetGroupCIDResponse(fcrMsg *FCRMessage) (
 	if err != nil {
 		return nil, false, nil, err
 	}
-	offers := make([]cidoffer.CidGroupOffer, 0)
-	return &msg.GatewayID, msg.Found, offers, nil
+	return &msg.GatewayID, msg.Found, msg.CIDGroupInfo, nil
 }

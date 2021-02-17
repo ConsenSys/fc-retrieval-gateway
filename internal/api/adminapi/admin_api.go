@@ -17,14 +17,12 @@ package adminapi
 
 import (
 	"net"
-	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
 // StartAdminAPI starts the TCP API as a separate go routine.
@@ -112,30 +110,4 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 		// Message is invalid.
 		fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
 	}
-}
-
-// GetConnForRequestingAdminClient returns the connection for sending request to an admin client with given id.
-// It will reuse any active connection.
-func GetConnForRequestingAdminClient(gatewayID nodeid.NodeID, g *gateway.Gateway) (*gateway.CommunicationChannel, error) {
-	// Check if there is an active connection.
-	g.ActiveGatewaysLock.RLock() // TODO: Check this - Will need to add active admin connections to core structure
-	gComm := g.ActiveGateways[gatewayID.ToString()]
-	g.ActiveGatewaysLock.RUnlock()
-	if gComm == nil {
-		// No active connection, connect to peer.
-		g.GatewayAddressMapLock.RLock()
-		conn, err := net.Dial("tcp", g.GatewayAddressMap[gatewayID.ToString()])
-		g.GatewayAddressMapLock.RUnlock()
-		if err != nil {
-			return nil, err
-		}
-		gComm = &gateway.CommunicationChannel{
-			CommsLock: sync.RWMutex{},
-			Conn:      conn}
-		if gateway.RegisterGatewayCommunication(&gatewayID, gComm) != nil {
-			conn.Close()
-			return nil, err
-		}
-	}
-	return gComm, nil
 }

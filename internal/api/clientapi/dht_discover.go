@@ -32,10 +32,10 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 		return
 	}
 	// Use DHT to get response.
-	g.GatewayAddressMapLock.RLock()
-	defer g.GatewayAddressMapLock.RUnlock()
+	g.RegisteredGatewaysMapLock.RLock()
+	defer g.RegisteredGatewaysMapLock.RUnlock()
 
-	if len(g.GatewayAddressMap) < int(numDHT) {
+	if len(g.RegisteredGatewaysMap) < int(numDHT) {
 		s := "Gateway does not store enough peers."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
@@ -46,7 +46,7 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 	// TODO: Need to add an algorithm to select gateways from the map.
 	// For now, it is random.
 	i := 0
-	for k := range g.GatewayAddressMap {
+	for k := range g.RegisteredGatewaysMap {
 		if i >= int(numDHT) {
 			break
 		}

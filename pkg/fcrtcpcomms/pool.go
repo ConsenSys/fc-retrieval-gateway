@@ -7,6 +7,13 @@ import (
 
 	log "github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/register"
+)
+
+// Constants for identifying the correct access point
+const (
+	AccessFromGateway  = 0
+	AccessFromProvider = 1
 )
 
 // CommunicationChannel holds the connection for sending outgoing TCP requests.
@@ -19,21 +26,21 @@ type CommunicationChannel struct {
 
 // CommunicationPool holds the node address map and active node connections.
 type CommunicationPool struct {
-	// AddressMap stores mapping from node id (big int in string repr) to its address.
-	NodeAddressMap     	map[string](string)
-	NodeAddressMapLock 	sync.RWMutex
+	// AddressMap stores mapping from node id (big int in string repr) to its node info.
+	RegisteredNodeMap     map[string]register.RegisteredNode
+	RegisteredNodeMapLock *sync.RWMutex
 
 	// ActiveNodes store connected active nodes for outgoing request:
 	// A map from node id (big int in string repr) to a CommunicationChannel.
-	ActiveNodes     		map[string](*CommunicationChannel)
-	ActiveNodesLock 		sync.RWMutex
+	ActiveNodes     map[string](*CommunicationChannel)
+	ActiveNodesLock sync.RWMutex
 }
 
-// Create a new communication commPool.
-func NewCommunicationPool() CommunicationPool {
-	return CommunicationPool{
-		NodeAddressMap:        make(map[string](string)),
-		NodeAddressMapLock:    sync.RWMutex{},
+// NewCommunicationPool creates a new communication commPool.
+func NewCommunicationPool(registeredNodeMap map[string]register.RegisteredNode, registeredNodeMapLock *sync.RWMutex) *CommunicationPool {
+	return &CommunicationPool{
+		RegisteredNodeMap:     registeredNodeMap,
+		RegisteredNodeMapLock: registeredNodeMapLock,
 		ActiveNodes:           make(map[string](*CommunicationChannel)),
 		ActiveNodesLock:       sync.RWMutex{},
 	}
@@ -41,18 +48,26 @@ func NewCommunicationPool() CommunicationPool {
 
 // GetConnForRequestingNode returns the connection for sending request to a node with given id.
 // It will reuse any active connection.
-func (commPool *CommunicationPool) GetConnForRequestingNode(nodeID *nodeid.NodeID) (*CommunicationChannel, error) {
+func (commPool *CommunicationPool) GetConnForRequestingNode(nodeID *nodeid.NodeID, accessFrom int) (*CommunicationChannel, error) {
 	log.Info("Get active connection, nodeID: %v", nodeID.ToString())
 	commPool.ActiveNodesLock.RLock()
 	comm := commPool.ActiveNodes[nodeID.ToString()]
 	commPool.ActiveNodesLock.RUnlock()
 	if comm == nil {
 		log.Info("No active connection, connect to peer")
-		commPool.NodeAddressMapLock.RLock()
-		address := commPool.NodeAddressMap[nodeID.ToString()]
+		var address string
+		commPool.RegisteredNodeMapLock.RLock()
+		if node, ok := commPool.RegisteredNodeMap[nodeID.ToString()]; ok {
+			switch accessFrom {
+			case AccessFromGateway:
+				address = node.GetNetworkGatewayInfo()
+			case AccessFromProvider:
+				address = node.GetNetworkProviderInfo()
+			}
+		}
+		commPool.RegisteredNodeMapLock.RUnlock()
 		log.Debug("Got address: %v", address)
 		conn, err := net.Dial("tcp", address)
-		commPool.NodeAddressMapLock.RUnlock()
 		if err != nil {
 			log.Error("Unable to get connection: %v", err)
 			return nil, err
@@ -70,21 +85,21 @@ func (commPool *CommunicationPool) GetConnForRequestingNode(nodeID *nodeid.NodeI
 	return comm, nil
 }
 
-// RegisterNodeAddress registers a node address
-func (commPool *CommunicationPool) RegisterNodeAddress(nodeID *nodeid.NodeID, address string) {
-	commPool.NodeAddressMapLock.Lock()
-	defer commPool.NodeAddressMapLock.Unlock()
-	commPool.NodeAddressMap[nodeID.ToString()] = address
+// AddRegisteredNode adds a new registered node
+func (commPool *CommunicationPool) AddRegisteredNode(nodeID *nodeid.NodeID, node *register.RegisteredNode) {
+	commPool.RegisteredNodeMapLock.Lock()
+	defer commPool.RegisteredNodeMapLock.Unlock()
+	commPool.RegisteredNodeMap[nodeID.ToString()] = *node
 }
 
 // DeregisterNodeAddress deregisters a node address
 // Fail silently
 func (commPool *CommunicationPool) DeregisterNodeAddress(nodeID *nodeid.NodeID) {
-	commPool.NodeAddressMapLock.Lock()
-	defer commPool.NodeAddressMapLock.Unlock()
-	_, exist := commPool.NodeAddressMap[nodeID.ToString()]
+	commPool.RegisteredNodeMapLock.Lock()
+	defer commPool.RegisteredNodeMapLock.Unlock()
+	_, exist := commPool.RegisteredNodeMap[nodeID.ToString()]
 	if exist {
-		delete(commPool.NodeAddressMap, nodeID.ToString())
+		delete(commPool.RegisteredNodeMap, nodeID.ToString())
 	}
 }
 
@@ -105,8 +120,9 @@ func (commPool *CommunicationPool) RegisterNodeCommunication(nodeID *nodeid.Node
 func (commPool *CommunicationPool) DeregisterNodeCommunication(nodeID *nodeid.NodeID) {
 	commPool.ActiveNodesLock.Lock()
 	defer commPool.ActiveNodesLock.Unlock()
-	_, exist := commPool.ActiveNodes[nodeID.ToString()]
+	comm, exist := commPool.ActiveNodes[nodeID.ToString()]
 	if exist {
+		comm.Conn.Close()
 		delete(commPool.ActiveNodes, nodeID.ToString())
 	}
 }

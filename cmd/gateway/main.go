@@ -13,7 +13,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-register/pkg/register"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/register"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 	logging.Info("Filecoin Gateway Start-up: Started")
 
 	logging.Info("Settings: %+v", settings)
-	
+
 	// Initialise a dummy gateway instance.
 	g := gateway.GetSingleInstance(&settings)
 
@@ -31,23 +31,39 @@ func main() {
 	gatewayReg := register.GatewayRegister{
 		NodeID:              settings.GatewayID,
 		Address:             settings.GatewayAddress,
+		RootSigningKey:      settings.GatewayRootSigningKey,
+		SigningKey:          settings.GatewaySigningKey,
 		NetworkGatewayInfo:  settings.GatewayNetworkInfo,
 		NetworkProviderInfo: settings.ProviderNetworkInfo,
 		NetworkClientInfo:   settings.ClientNetworkInfo,
 		NetworkAdminInfo:    settings.AdminNetworkInfo,
 		RegionCode:          settings.GatewayRegionCode,
-		RootSigningKey:      settings.GatewayRootSigningKey,
-		SigingKey:           settings.GatewaySigningKey,
 	}
-	register.RegisterGateway(settings.RegisterAPIURL, gatewayReg)
+	gatewayReg.RegisterGateway(settings.RegisterAPIURL)
 
 	// Get all registerd Gateways
 	gateways, err := register.GetRegisteredGateways(settings.RegisterAPIURL)
 	if err != nil {
 		logging.Error("Unable to get registered gateways: %v", err)
 	}
-	g.RegisteredGateways = gateways
-	logging.Info("All registered gateways: %+v", g.RegisteredGateways)
+	g.RegisteredGatewaysMapLock.Lock()
+	logging.Info("All registered gateways: %+v", gateways)
+	for _, gateway := range gateways {
+		g.RegisteredGatewaysMap[gateway.NodeID] = &gateway
+	}
+	g.RegisteredGatewaysMapLock.Unlock()
+
+	// Get all registered Providers
+	providers, err := register.GetRegisteredProviders(settings.RegisterAPIURL)
+	if err != nil {
+		logging.Error("Unable to get registered providers: %v", err)
+	}
+	g.RegisteredProvidersMapLock.Lock()
+	logging.Info("All registered providers: %+v", providers)
+	for _, provider := range providers {
+		g.RegisteredGatewaysMap[provider.NodeID] = &provider
+	}
+	g.RegisteredGatewaysMapLock.Unlock()
 
 	err = clientapi.StartClientRestAPI(settings)
 	if err != nil {

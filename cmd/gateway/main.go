@@ -63,7 +63,7 @@ func main() {
 	for _, provider := range providers {
 		g.RegisteredGatewaysMap[provider.NodeID] = &provider
 	}
-	g.RegisteredGatewaysMapLock.Unlock()
+	g.RegisteredProvidersMapLock.Unlock()
 
 	err = clientapi.StartClientRestAPI(settings)
 	if err != nil {

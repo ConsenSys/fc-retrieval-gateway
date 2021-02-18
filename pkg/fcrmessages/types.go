@@ -32,6 +32,7 @@ const (
 	ClientCIDGroupPublishDHTAckRequestType      = 6
 	ClientCIDGroupPublishDHTAckResponseType     = 7
 	ProviderPublishGroupCIDRequestType          = 8
+	ProviderPublishGroupCIDResponseType					= 302
 	ProviderDHTPublishGroupCIDRequestType       = 9
 	ProviderDHTPublishGroupCIDAckType           = 10
 	GatewaySingleCIDOfferPublishRequestType     = 11

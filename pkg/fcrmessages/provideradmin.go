@@ -53,7 +53,6 @@ func DecodeProviderAdminGetGroupCIDRequest(fcrMsg *FCRMessage) (
 
 // ProviderAdminGetGroupCIDResponse is the response to ProviderAdminGetGroupCIDResponse
 type ProviderAdminGetGroupCIDResponse struct {
-	GatewayID			nodeid.NodeID 				`json:"gateway_id"`
 	Found        	bool                  `json:"found"`
 	CIDGroupInfo 	[]CIDGroupInformation `json:"cid_group_information"`
 }
@@ -99,18 +98,17 @@ func EncodeProviderAdminGetGroupCIDResponse(
 
 // DecodeProviderAdminGetGroupCIDResponse is used to get the fields from FCRMessage of ProviderAdminGetGroupCIDResponse
 func DecodeProviderAdminGetGroupCIDResponse(fcrMsg *FCRMessage) (
-	*nodeid.NodeID, // gatewayID id
 	bool, // found
 	[]CIDGroupInformation, // offers
 	error, // error
 ) {
 	if fcrMsg.MessageType != ProviderAdminGetGroupCIDResponseType {
-		return nil, false, nil, fmt.Errorf("Message type mismatch")
+		return false, nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := ProviderAdminGetGroupCIDResponse{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return nil, false, nil, err
+		return false, nil, err
 	}
-	return &msg.GatewayID, msg.Found, msg.CIDGroupInfo, nil
+	return msg.Found, msg.CIDGroupInfo, nil
 }

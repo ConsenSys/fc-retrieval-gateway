@@ -60,7 +60,6 @@ type ProviderAdminGetGroupCIDResponse struct {
 
 // EncodeProviderAdminGetGroupCIDResponse is used to get the FCRMessage of ProviderAdminGetGroupCIDResponse
 func EncodeProviderAdminGetGroupCIDResponse(
-	gatewayID *nodeid.NodeID,
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
@@ -84,7 +83,6 @@ func EncodeProviderAdminGetGroupCIDResponse(
 		}
 	}
 	body, err := json.Marshal(ProviderAdminGetGroupCIDResponse{
-		GatewayID:   *gatewayID,
 		Found:        found,
 		CIDGroupInfo: cidGroupInfo,
 	})

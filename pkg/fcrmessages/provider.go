@@ -92,7 +92,7 @@ func EncodeProviderPublishGroupCIDResponse(
 		return nil, err
 	}
 	return &FCRMessage{
-		MessageType:       ProviderPublishGroupCIDRequestType,
+		MessageType:       ProviderPublishGroupCIDResponseType,
 		ProtocolVersion:   protocolVersion,
 		ProtocolSupported: protocolSupported,
 		MessageBody:       body,

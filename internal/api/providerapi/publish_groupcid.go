@@ -1,21 +1,29 @@
 package providerapi
 
 import (
+	"errors"
+	"net"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 )
 
-func handleProviderPublishGroupCIDRequest(request *fcrmessages.FCRMessage) {
+func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FCRMessage) error {
+	logging.Info("handleProviderPublishGroupCIDRequest: %+v", request)
+
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
 	// TODO: Why we need a nonce here?
+	logging.Info("Decode provider publish group CID request: %+v", request)
 	_, offer, err := fcrmessages.DecodeProviderPublishGroupCIDRequest(request)
 	if err != nil {
 		logging.Info("Provider publish group cid request fail to decode.")
-		return
+		return err
 	}
 
 	// Need to verify the offer
@@ -25,12 +33,12 @@ func handleProviderPublishGroupCIDRequest(request *fcrmessages.FCRMessage) {
 	provider, ok := g.RegisteredProvidersMap[offer.NodeID.ToString()]
 	if !ok {
 		logging.Info("Provider public key not found.")
-		return
+		return errors.New("Provider public key not found")
 	}
 	pubKey, err := provider.GetSigningKey()
 	if err != nil {
 		logging.Info("Fail to get signing key from provider registration info")
-		return
+		return err
 	}
 
 	ok, err = offer.VerifySignature(func(sig string, msg interface{}) (bool, error) {
@@ -41,19 +49,32 @@ func handleProviderPublishGroupCIDRequest(request *fcrmessages.FCRMessage) {
 	if err != nil {
 		logging.Error("Internal error in verifying group cid offer.")
 		// Ignored.
-		return
+		return err
 	}
 
 	// Offer does not pass verification
 	if !ok {
 		logging.Info("Offer does not pass verification.")
 		// Ignored.
-		return
+		return errors.New("Offer does not pass verification")
 	}
 
+	// Store the offer
 	if g.Offers.Add(offer) != nil {
-		// Ignoved.
 		logging.Error("Internal error in adding group cid offer.")
+		return err
 	}
-	return
+
+	logging.Info("Encode provider publish group CID response: %+v", offer)
+	response, err := fcrmessages.EncodeProviderPublishGroupCIDResponse(
+		*g.GatewayID,
+		offer.GetMessageDigest(),
+	)
+	if err != nil {
+		logging.Error("Internal error in encoding publish group cid response.")
+		return err
+	}
+
+	logging.Info("Send response to provider: %+v", response)
+	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

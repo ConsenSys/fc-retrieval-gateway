@@ -73,6 +73,49 @@ func DecodeProviderPublishGroupCIDRequest(fcrMsg *FCRMessage) (
 	return msg.Nonce, offer, nil
 }
 
+// ProviderPublishGroupCIDResponse is the response from gateway to provider after publishing group cid offer
+type ProviderPublishGroupCIDResponse struct {
+	GateaydID 	nodeid.NodeID   								`json:"provider_id"`
+	Digest  		[CidGroupOfferDigestSize]byte   `json:"digest"`
+}
+
+// EncodeProviderPublishGroupCIDResponse is used to get the FCRMessage of ProviderPublishGroupCIDResponse
+func EncodeProviderPublishGroupCIDResponse(
+	gateaydID	nodeid.NodeID,
+	digest 		[CidGroupOfferDigestSize]byte,
+) (*FCRMessage, error) {
+	body, err := json.Marshal(ProviderPublishGroupCIDResponse{
+		GateaydID:  gateaydID,
+		Digest: 		digest,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &FCRMessage{
+		MessageType:       ProviderPublishGroupCIDResponseType,
+		ProtocolVersion:   protocolVersion,
+		ProtocolSupported: protocolSupported,
+		MessageBody:       body,
+	}, nil
+}
+
+// DecodeProviderPublishGroupCIDResponse is used to get the fields from FCRMessage of ProviderPublishGroupCIDResponse
+func DecodeProviderPublishGroupCIDResponse(fcrMsg *FCRMessage) (
+	*nodeid.NodeID, // gatewayID
+	[CidGroupOfferDigestSize]byte, // digest
+	error, // error
+) {
+	if fcrMsg.MessageType != ProviderPublishGroupCIDResponseType {
+		return nil, [CidGroupOfferDigestSize]byte{}, fmt.Errorf("Message type mismatch")
+	}
+	msg := ProviderPublishGroupCIDResponse{}
+	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
+	if err != nil {
+		return nil, [CidGroupOfferDigestSize]byte{}, err
+	}
+	return &msg.GateaydID, msg.Digest, nil
+}
+
 // ProviderDHTPublishGroupCIDRequest is the request from provider to gateway to publish group cid offer using DHT
 type ProviderDHTPublishGroupCIDRequest struct {
 	Nonce           int64         `json:"nonce"`

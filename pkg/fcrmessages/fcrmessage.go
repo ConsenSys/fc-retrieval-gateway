@@ -1,12 +1,14 @@
 package fcrmessages
 
 import (
+	"crypto/sha512"
 	"encoding/json"
 )
 
 const (
 	defaultProtocolVersion            = 1
 	defaultAlternativeProtocolVersion = 1
+	CidGroupOfferDigestSize						= sha512.Size256
 )
 
 var protocolVersion int32 = defaultProtocolVersion

@@ -1,7 +1,6 @@
 package fcrmessages
 
 import (
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -32,6 +31,7 @@ const (
 	ClientCIDGroupPublishDHTAckRequestType      = 6
 	ClientCIDGroupPublishDHTAckResponseType     = 7
 	ProviderPublishGroupCIDRequestType          = 8
+	ProviderPublishGroupCIDResponseType					= 302
 	ProviderDHTPublishGroupCIDRequestType       = 9
 	ProviderDHTPublishGroupCIDAckType           = 10
 	GatewaySingleCIDOfferPublishRequestType     = 11
@@ -49,6 +49,8 @@ const (
 	AdminSetReputationResponseType              = 203
 	AdminAcceptKeyChallengeType                 = 204
 	AdminAcceptKeyResponseType                  = 205
+	ProviderAdminGetGroupCIDRequestType					= 300
+	ProviderAdminGetGroupCIDResponseType				= 301
 )
 
 // CIDGroupInformation represents a cid group information
@@ -59,6 +61,5 @@ type CIDGroupInformation struct {
 	QoS                  uint64                       `json:"qos"`
 	Signature            string                       `json:"signature"`
 	MerkleRoot           string                       `json:"merkle_root"`
-	MerkleProof          fcrmerkletree.FCRMerkleProof `json:"merkle_proof"`
 	FundedPaymentChannel bool                         `json:"funded_payment_channel"` // TODO: Is this boolean?
 }

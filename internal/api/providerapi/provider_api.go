@@ -47,7 +47,12 @@ func handleIncomingProviderConnection(conn net.Conn) {
 		if err == nil {
 			logging.Info("Message received: %+v", message)
 			if message.MessageType == fcrmessages.ProviderPublishGroupCIDRequestType {
-				handleProviderPublishGroupCIDRequest(message)
+				err = handleProviderPublishGroupCIDRequest(conn, message)
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection
+					logging.Error(err.Error())
+					return
+				}
 				continue
 			} else if message.MessageType == fcrmessages.ProviderDHTPublishGroupCIDRequestType {
 				err = handleProviderDHTPublishGroupCIDRequest(conn, message)

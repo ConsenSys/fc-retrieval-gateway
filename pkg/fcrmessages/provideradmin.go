@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
@@ -62,7 +61,6 @@ func EncodeProviderAdminGetGroupCIDResponse(
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
-	proofs []fcrmerkletree.FCRMerkleProof,
 	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, len(offers))
@@ -76,7 +74,6 @@ func EncodeProviderAdminGetGroupCIDResponse(
 				QoS:                  offer.QoS,
 				Signature:            offer.Signature,
 				MerkleRoot:           roots[i],
-				MerkleProof:          proofs[i],
 				FundedPaymentChannel: fundedPaymentChannel[i],
 			}
 		}

@@ -20,27 +20,27 @@ type RegisteredNode interface {
 
 // GatewayRegister stores information of a registered gateway
 type GatewayRegister struct {
-	NodeID              string `json:"node_id"`
+	NodeID              string `json:"nodeId"`
 	Address             string `json:"address"`
-	RootSigningKey      string `json:"root_signing_key"`
-	SigningKey          string `json:"signing_key"`
-	RegionCode          string `json:"region_code"`
-	NetworkGatewayInfo  string `json:"network_gateway_info"`
-	NetworkProviderInfo string `json:"network_provider_info"`
-	NetworkClientInfo   string `json:"network_client_info"`
-	NetworkAdminInfo    string `json:"network_admin_info"`
+	RootSigningKey      string `json:"rootSigningKey"`
+	SigningKey          string `json:"sigingKey"`
+	RegionCode          string `json:"regionCode"`
+	NetworkGatewayInfo  string `json:"networkGatewayInfo"`
+	NetworkProviderInfo string `json:"networkProviderInfo"`
+	NetworkClientInfo   string `json:"networkClientInfo"`
+	NetworkAdminInfo    string `json:"networkAdminInfo"`
 }
 
 // ProviderRegister stores information of a registered provider
 type ProviderRegister struct {
-	NodeID             string `json:"node_id"`
+	NodeID             string `json:"nodeId"`
 	Address            string `json:"address"`
-	RootSigningKey     string `json:"root_signing_key"`
-	SigningKey         string `json:"signing_key"`
-	RegionCode         string `json:"region_code"`
-	NetworkGatewayInfo string `json:"network_gateway_info"`
-	NetworkClientInfo  string `json:"network_client_info"`
-	NetworkAdminInfo   string `json:"network_admin_info"`
+	RootSigningKey     string `json:"rootSigningKey"`
+	SigningKey         string `json:"sigingKey"`
+	RegionCode         string `json:"regionCode"`
+	NetworkGatewayInfo string `json:"networkGatewayInfo"`
+	NetworkClientInfo  string `json:"networkClientInfo"`
+	NetworkAdminInfo   string `json:"networkAdminInfo"`
 }
 
 // GetRegisteredGateways returns registered gateways

@@ -7,10 +7,12 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
 )
 
 // GatewaySingleCIDOfferPublishRequest is the request from gateway to provider during start-up asking for cid offers
 type GatewaySingleCIDOfferPublishRequest struct {
+	GatewayID          nodeid.NodeID                `json:"gateway_id"`
 	CIDMin             cid.ContentID                `json:"cid_min"`
 	CIDMax             cid.ContentID                `json:"cid_max"`
 	BlockHash          string                       `json:"block_hash"`
@@ -21,6 +23,7 @@ type GatewaySingleCIDOfferPublishRequest struct {
 
 // EncodeGatewaySingleCIDOfferPublishRequest is used to get the FCRMessage of GatewaySingleCIDOfferPublishRequest
 func EncodeGatewaySingleCIDOfferPublishRequest(
+	gatewayID *nodeid.NodeID,
 	cidMin *cid.ContentID,
 	cidMax *cid.ContentID,
 	blockHash string,
@@ -29,6 +32,7 @@ func EncodeGatewaySingleCIDOfferPublishRequest(
 	merkleProof *fcrmerkletree.FCRMerkleProof,
 ) (*FCRMessage, error) {
 	body, err := json.Marshal(GatewaySingleCIDOfferPublishRequest{
+		GatewayID:          *gatewayID,
 		CIDMin:             *cidMin,
 		CIDMax:             *cidMax,
 		BlockHash:          blockHash,
@@ -49,6 +53,7 @@ func EncodeGatewaySingleCIDOfferPublishRequest(
 
 // DecodeGatewaySingleCIDOfferPublishRequest is used to get the fields from FCRMessage of GatewaySingleCIDOfferPublishRequest
 func DecodeGatewaySingleCIDOfferPublishRequest(fcrMsg *FCRMessage) (
+	*nodeid.NodeID, // gatewayID
 	*cid.ContentID, // cid min
 	*cid.ContentID, // cid max
 	string, // block hash
@@ -58,14 +63,14 @@ func DecodeGatewaySingleCIDOfferPublishRequest(fcrMsg *FCRMessage) (
 	error, // error
 ) {
 	if fcrMsg.MessageType != GatewaySingleCIDOfferPublishRequestType {
-		return nil, nil, "", "", "", nil, fmt.Errorf("Message type mismatch")
+		return nil, nil, nil, "", "", "", nil, fmt.Errorf("Message type mismatch")
 	}
 	msg := GatewaySingleCIDOfferPublishRequest{}
 	err := json.Unmarshal(fcrMsg.MessageBody, &msg)
 	if err != nil {
-		return nil, nil, "", "", "", nil, err
+		return nil, nil, nil, "", "", "", nil, err
 	}
-	return &msg.CIDMin, &msg.CIDMax, msg.BlockHash, msg.TransactionReceipt, msg.MerkleRoot, &msg.MerkleProof, nil
+	return &msg.GatewayID, &msg.CIDMin, &msg.CIDMax, msg.BlockHash, msg.TransactionReceipt, msg.MerkleRoot, &msg.MerkleProof, nil
 }
 
 // GatewaySingleCIDOfferPublishResponse is the repsonse to GatewaySingleCIDOfferPublishRequest

@@ -25,6 +25,7 @@ func RequestSingleCIDOffers(cidMin, cidMax *cid.ContentID, providerID *nodeid.No
 	defer pComm.CommsLock.Unlock()
 	// Construct message
 	request, err := fcrmessages.EncodeGatewaySingleCIDOfferPublishRequest(
+		g.GatewayID,
 		cidMin,
 		cidMax,
 		g.RegistrationBlockHash,

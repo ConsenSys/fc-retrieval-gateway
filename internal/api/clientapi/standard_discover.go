@@ -7,6 +7,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrcrypto"
+	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmerkletree"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 	"github.com/ant0ine/go-json-rest/rest"
@@ -35,22 +36,25 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	offers, exists := g.Offers.GetOffers(pieceCID)
 
 	roots := make([]string, 0)
+	proofs := make([]fcrmerkletree.FCRMerkleProof, 0)
 	fundedPaymentChannel := make([]bool, 0)
 
 	for _, offer := range offers {
 		tree := offer.GetMerkleTrie()
 		roots = append(roots, tree.GetMerkleRoot())
+		proof, err := tree.GenerateMerkleProof(pieceCID)
 		if err != nil {
 			s := "Internal error: Error generating proof."
 			logging.Error(s + err.Error())
 			rest.Error(w, s, http.StatusBadRequest)
 			return
 		}
+		proofs = append(proofs, *proof)
 		fundedPaymentChannel = append(fundedPaymentChannel, false) // TODO, Need to find a way to check if having payment channel set up for a given provider.
 	}
 
 	// Construct response
-	response, err := fcrmessages.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, offers, roots, fundedPaymentChannel)
+	response, err := fcrmessages.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, offers, roots, proofs, fundedPaymentChannel)
 	if err != nil {
 		s := "Internal error: Error encoding payload."
 		logging.Error(s + err.Error())

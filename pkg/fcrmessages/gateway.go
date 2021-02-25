@@ -213,6 +213,7 @@ func EncodeGatewayDHTDiscoverResponse(
 	found bool,
 	offers []*cidoffer.CidGroupOffer,
 	roots []string,
+	proofs []fcrmerkletree.FCRMerkleProof,
 	fundedPaymentChannel []bool,
 ) (*FCRMessage, error) {
 	cidGroupInfo := make([]CIDGroupInformation, len(offers))
@@ -226,6 +227,7 @@ func EncodeGatewayDHTDiscoverResponse(
 				QoS:                  offer.QoS,
 				Signature:            offer.Signature,
 				MerkleRoot:           roots[i],
+				MerkleProof:          proofs[i],
 				FundedPaymentChannel: fundedPaymentChannel[i],
 			}
 		}
@@ -285,6 +287,7 @@ func DecodeGatewayDHTDiscoverResponse(fcrMsg *FCRMessage) (
 			offer.Signature = offerInfo.Signature
 			offers = append(offers, *offer)
 			roots = append(roots, offerInfo.MerkleRoot)
+			proofs = append(proofs, offerInfo.MerkleProof)
 			fundedPaymentChannel = append(fundedPaymentChannel, offerInfo.FundedPaymentChannel)
 		}
 	}

@@ -18,6 +18,9 @@ push:
 tag:
 	cd scripts; bash tag.sh ${VERSION} ${IMAGE}:${VERSION}
 
+useremote:
+	cd scripts; bash use-remote-repos.sh
+
 
 utest:
 	go test ./...

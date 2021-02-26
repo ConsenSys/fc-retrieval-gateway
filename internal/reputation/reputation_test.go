@@ -19,7 +19,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/stretchr/testify/assert"
 )
 

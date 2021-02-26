@@ -8,9 +8,9 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cid"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cid"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/cidoffer"
 )
 
 // Single instance of the CID Offer system

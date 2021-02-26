@@ -1,8 +1,9 @@
 package reputation
+
 // Copyright (C) 2020 ConsenSys Software Inc
 
 import (
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 )
 
 // NOTE: At present all reputation is stored in memory. This will need to change as we move beyond a PoC.

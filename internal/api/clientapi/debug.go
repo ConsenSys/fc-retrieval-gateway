@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 

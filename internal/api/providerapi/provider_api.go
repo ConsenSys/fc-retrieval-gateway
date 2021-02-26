@@ -3,10 +3,10 @@ package providerapi
 import (
 	"net"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-gateway/pkg/logging"
 )
 
 // StartProviderAPI starts the TCP API as a separate go routine.

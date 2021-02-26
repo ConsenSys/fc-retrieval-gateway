@@ -25,7 +25,6 @@ jobs:
 
   publishDocker:
     environment:
-      REGISTRY: consensys/
       IMAGE_NAME: consensys/fc-retrieval-gateway
       IMAGE_VERSION: dev
     docker:
@@ -36,7 +35,7 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            make build REGISTRY=$REGISTRY VERSION=$IMAGE_VERSION
+            docker build -t $IMAGE_NAME:$IMAGE_VERSION .
       - run:
           name: Publish Docker image
           command: |

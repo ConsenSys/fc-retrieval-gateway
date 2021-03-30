@@ -96,7 +96,7 @@ func AcknowledgeSingleCIDOffers(response *fcrmessages.FCRMessage, providerID *no
 	// Construct the message
 	cidOfferAcks := make([]fcrmessages.FCRMessage, 0)
 	for _, cidOffer := range cidOffers {
-		_, nonce, _, err := fcrmsgpvd.DecodeProviderDHTPublishGroupCIDRequest(&cidOffer)
+		_, nonce, _, err := fcrmsgpvd.DecodeProviderPublishDHTOfferRequest(&cidOffer)
 		if err != nil {
 			return nil, err
 		}

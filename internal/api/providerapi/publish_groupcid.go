@@ -50,7 +50,7 @@ func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FC
 	}
 	logging.Info("Stored offers: %+v", g.Offers)
 
-	response, err := fcrmsgpvd.EncodeProviderPublishGroupCIDResponse(
+	response, err := fcrmsgpvd.EncodeProviderPublishGroupOfferResponse(
 		*g.GatewayID,
 		offer.GetMessageDigest(),
 	)

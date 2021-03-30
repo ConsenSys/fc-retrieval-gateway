@@ -17,7 +17,7 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	providerID, nonce, offers, err := fcrmsgpvd.DecodeProviderDHTPublishGroupCIDRequest(request)
+	providerID, nonce, offers, err := fcrmsgpvd.DecodeProviderPublishDHTOfferRequest(request)
 	if err != nil {
 		logging.Info("Provider publish dht offer request fail to decode.")
 		return nil

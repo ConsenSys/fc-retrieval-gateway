@@ -145,19 +145,19 @@ func TestMultipleCids(t *testing.T) {
 	assert.Equal(t, 1, len(cidOffers), "Should be only one CID offer")
 }
 
-func createOldSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CidGroupOffer {
+func createOldSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CIDOffer {
 	return createSingleCidGroupOffer(t, cidOne(t), 0)
 }
 
-func createNewSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CidGroupOffer {
+func createNewSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CIDOffer {
 	return createSingleCidGroupOffer(t, cidOne(t), 1)
 }
 
-func createFutureSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CidGroupOffer {
+func createFutureSingleCidGroupOfferCidOne(t *testing.T) *cidoffer.CIDOffer {
 	return createSingleCidGroupOffer(t, cidOne(t), 2)
 }
 
-func createNewCidGroupOfferCidMultiple(t *testing.T) *cidoffer.CidGroupOffer {
+func createNewCidGroupOfferCidMultiple(t *testing.T) *cidoffer.CIDOffer {
 	cids := make([]cid.ContentID, 0)
 	cids = append(cids, *cidOne(t))
 	cids = append(cids, *cidTwo(t))
@@ -165,17 +165,14 @@ func createNewCidGroupOfferCidMultiple(t *testing.T) *cidoffer.CidGroupOffer {
 	return createCidGroupOffer(t, cids, 1)
 }
 
-func createSingleCidGroupOffer(t *testing.T, theCid *cid.ContentID, howNew int) *cidoffer.CidGroupOffer {
+func createSingleCidGroupOffer(t *testing.T, theCid *cid.ContentID, howNew int) *cidoffer.CIDOffer {
 	cids := make([]cid.ContentID, 0)
 	cids = append(cids, *theCid)
 	return createCidGroupOffer(t, cids, howNew)
 }
 
-func createCidGroupOffer(t *testing.T, cids []cid.ContentID, howNew int) *cidoffer.CidGroupOffer {
-	aNodeID, err := nodeid.NewRandomNodeID()
-	if err != nil {
-		panic(err)
-	}
+func createCidGroupOffer(t *testing.T, cids []cid.ContentID, howNew int) *cidoffer.CIDOffer {
+	aNodeID := nodeid.NewRandomNodeID()
 	price := uint64(5)
 	now := time.Now()
 	nowSeconds := now.Unix()
@@ -189,7 +186,7 @@ func createCidGroupOffer(t *testing.T, cids []cid.ContentID, howNew int) *cidoff
 		expiry = nowSeconds + 1000
 	}
 	qos := uint64(5)
-	c, err := cidoffer.NewCidGroupOffer(aNodeID, &cids, price, expiry, qos)
+	c, err := cidoffer.NewCIDOffer(aNodeID, cids, price, expiry, qos)
 	if err != nil {
 		t.Errorf("Error returned by NewCidGroupOffer: %e", err)
 	}

@@ -19,10 +19,9 @@ import (
 	"errors"
 	"net"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggwadmin"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
@@ -35,8 +34,7 @@ func handleAdminGetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMe
 		return errors.New("This gateway hasn't been initialised by the admin")
 	}
 
-	logging.Info("In handleAdminGetReputationChallenge")
-	clientID, err := fcrmessages.DecodeAdminGetReputationChallenge(request)
+	clientID, err := fcrmsggwadmin.DecodeGatewayAdminGetReputationRequest(request)
 	if err != nil {
 		return err
 	}
@@ -46,14 +44,14 @@ func handleAdminGetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMe
 	reputation, exists := rep.GetClientReputation(clientID)
 
 	// Construct message
-	response, err := fcrmessages.EncodeAdminGetReputationResponse(clientID, reputation, exists)
+	response, err := fcrmsggwadmin.EncodeGatewayAdminGetReputationResponse(clientID, reputation, exists)
 	if err != nil {
 		return err
 	}
-	// Sign the response
-	response.SignMessage(func(msg interface{}) (string, error) {
-		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
-	})
+	// Sign message
+	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+		return errors.New("Error in signing message")
+	}
 	// Send message
 	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

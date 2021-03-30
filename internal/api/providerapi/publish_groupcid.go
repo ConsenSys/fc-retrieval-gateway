@@ -7,8 +7,8 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgpvd"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 )
@@ -16,12 +16,9 @@ import (
 func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	g := gateway.GetSingleInstance()
-	logging.Info("GatewayPrivateKey: %s", g.GatewayPrivateKey.EncodePrivateKey())
 
-	logging.Info("handleProviderPublishGroupCIDRequest: %+v", request)
 	// TODO Add nonce, it looks like nonce is not needed
-	logging.Info("Decode provider publish group CID request: %+v", request)
-	_, offer, err := fcrmessages.DecodeProviderPublishGroupCIDRequest(request)
+	providerID, _, offer, err := fcrmsgpvd.DecodeProviderPublishGroupOfferRequest(request)
 	if err != nil {
 		logging.Info("Provider publish group cid request fail to decode.")
 		return err
@@ -29,52 +26,31 @@ func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FC
 	// Get the provider's signing key
 	g.RegisteredProvidersMapLock.RLock()
 	defer g.RegisteredProvidersMapLock.RUnlock()
-	_, ok := g.RegisteredProvidersMap[offer.NodeID.ToString()]
+	_, ok := g.RegisteredProvidersMap[providerID.ToString()]
 	if !ok {
 		return errors.New("Provider not found")
 	}
-	pubKey, err := g.RegisteredProvidersMap[offer.NodeID.ToString()].GetSigningKey()
+	pubKey, err := g.RegisteredProvidersMap[providerID.ToString()].GetSigningKey()
 	if err != nil {
 		return err
 	}
 	// First verify the message
-	ok, err = request.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-		return fcrcrypto.VerifyMessage(pubKey, sig, msg)
-	})
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if request.Verify(pubKey) != nil {
 		return errors.New("Fail to verify the request")
 	}
 
 	// Second Need to verify the offer
-	ok, err = offer.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-		return fcrcrypto.VerifyMessage(pubKey, sig, msg)
-	})
-	// Error in verifying message
-	if err != nil {
-		logging.Error("Internal error in verifying group cid offer.")
-		// Ignored.
-		return err
-	}
-	// Offer does not pass verification
-	if !ok {
-		logging.Info("Offer does not pass verification.")
-		// Ignored.
-		return errors.New("Offer does not pass verification")
+	if offer.Verify(pubKey) != nil {
+		return errors.New("Fail to verify the offer")
 	}
 
 	// Store the offer
 	if g.Offers.Add(offer) != nil {
-		logging.Error("Internal error in adding group cid offer.")
-		return err
+		return errors.New("Fail to store the offer")
 	}
-
 	logging.Info("Stored offers: %+v", g.Offers)
 
-	logging.Info("Encode provider publish group CID response: %+v", offer)
-	response, err := fcrmessages.EncodeProviderPublishGroupCIDResponse(
+	response, err := fcrmsgpvd.EncodeProviderPublishGroupCIDResponse(
 		*g.GatewayID,
 		offer.GetMessageDigest(),
 	)
@@ -84,8 +60,8 @@ func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FC
 	}
 
 	// Sign the response
-	response.SignMessage(func(msg interface{}) (string, error) {
-		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
-	})
+	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+		return errors.New("Error in signing message")
+	}
 	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

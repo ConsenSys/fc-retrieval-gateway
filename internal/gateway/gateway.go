@@ -74,7 +74,7 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		}
 		conf := confs[0]
 
-		gatewayID, err := nodeid.NewNodeIDFromString(conf.GatewayID)
+		gatewayID, err := nodeid.NewNodeIDFromHexString(conf.GatewayID)
 		if err != nil {
 			logging.ErrorAndPanic("Error decoding node id: %s", err)
 		}

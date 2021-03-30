@@ -4,8 +4,8 @@ package clientapi
 import (
 	"net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgclient"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
@@ -17,7 +17,7 @@ func handleClientNetworkEstablishment(w rest.ResponseWriter, request *fcrmessage
 	// Get core structure
 	g := gateway.GetSingleInstance()
 
-	clientID, challenge, ttl, err := fcrmessages.DecodeClientEstablishmentRequest(request)
+	clientID, challenge, ttl, err := fcrmsgclient.DecodeClientEstablishmentRequest(request)
 	if err != nil {
 		s := "Client Establishment: Failed to decode payload."
 		logging.Error(s + err.Error())
@@ -34,7 +34,7 @@ func handleClientNetworkEstablishment(w rest.ResponseWriter, request *fcrmessage
 	}
 
 	// Construct message
-	response, err := fcrmessages.EncodeClientEstablishmentResponse(g.GatewayID, challenge)
+	response, err := fcrmsgclient.EncodeClientEstablishmentResponse(g.GatewayID, challenge)
 	if err != nil {
 		s := "Client Establishment: Error encoding payload."
 		logging.Error(s + err.Error())
@@ -42,10 +42,8 @@ func handleClientNetworkEstablishment(w rest.ResponseWriter, request *fcrmessage
 		return
 	}
 
-	// Sign the message
-	if response.SignMessage(func(msg interface{}) (string, error) {
-		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
-	}) != nil {
+	// Sign message
+	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
 		s := "Internal error."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)

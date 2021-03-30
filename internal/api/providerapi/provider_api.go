@@ -46,7 +46,7 @@ func handleIncomingProviderConnection(conn net.Conn) {
 		}
 		if err == nil {
 			logging.Info("Message received: %+v", message)
-			if message.MessageType == fcrmessages.ProviderPublishGroupCIDRequestType {
+			if message.GetMessageType() == fcrmessages.ProviderPublishGroupOfferRequestType {
 				err = handleProviderPublishGroupCIDRequest(conn, message)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection
@@ -54,7 +54,7 @@ func handleIncomingProviderConnection(conn net.Conn) {
 					return
 				}
 				continue
-			} else if message.MessageType == fcrmessages.ProviderDHTPublishGroupCIDRequestType {
+			} else if message.GetMessageType() == fcrmessages.ProviderPublishDHTOfferRequestType {
 				err = handleProviderDHTPublishGroupCIDRequest(conn, message)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection

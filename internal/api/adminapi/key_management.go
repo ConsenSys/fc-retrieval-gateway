@@ -16,56 +16,41 @@ package adminapi
  */
 
 import (
+	"errors"
 	"net"
 	"sync"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggwadmin"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
 func handleAdminAcceptKeysChallenge(conn net.Conn, request *fcrmessages.FCRMessage, wg *sync.WaitGroup) error {
-	logging.Info("In handleAdminAcceptKeysChallenge")
-
-	logging.Info("Message received \n%s", request.DumpMessage())
-
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	nodeID, encprivatekey, encprivatekeyversion, err := fcrmessages.DecodeAdminAcceptKeyChallenge(request)
+	nodeID, privKey, privKeyVer, err := fcrmsggwadmin.DecodeGatewayAdminInitialiseKeyRequest(request)
 	if err != nil {
 		return err
 	}
-
-	// Decode private key from hex string to *fcrCrypto.KeyPair
-	privatekey, err := fcrcrypto.DecodePrivateKey(encprivatekey)
-	if err != nil {
-		return err
-	}
-
-	// Decode from int32 to *fcrCrypto.KeyVersion
-	privatekeyversion := fcrcrypto.DecodeKeyVersion(encprivatekeyversion)
 
 	g.GatewayID = nodeID
-	g.GatewayPrivateKey = privatekey
-	g.GatewayPrivateKeyVersion = privatekeyversion
+	g.GatewayPrivateKey = privKey
+	g.GatewayPrivateKeyVersion = privKeyVer
 	wg.Done() // need mutex to protect g
 
 	// Construct messaqe
-	exists := true
-	response, err := fcrmessages.EncodeAdminAcceptKeyResponse(exists)
+	response, err := fcrmsggwadmin.EncodeGatewayAdminInitialiseKeyResponse(true)
 	if err != nil {
 		return err
 	}
 
-	logging.Info("Admin action: Key installation complete")
-	// Sign the response
-	response.SignMessage(func(msg interface{}) (string, error) {
-		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
-	})
+	// Sign message
+	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+		return errors.New("Error in signing message")
+	}
 	// Send message
 	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

@@ -19,10 +19,10 @@ var instance = newInstance()
 // Offers manages all CID Offers on this gateway.
 type Offers struct {
 	// Map of CIDs to array of CID Group Offer message digests
-	cidMap     map[string][][cidoffer.CidGroupOfferDigestSize]byte
+	cidMap     map[string][][cidoffer.CIDOfferDigestSize]byte
 	cidMapLock sync.RWMutex
 	// Map of CID Group Offer message digests to CID Group Offer
-	cidOffers     map[[cidoffer.CidGroupOfferDigestSize]byte]*cidoffer.CidGroupOffer
+	cidOffers     map[[cidoffer.CIDOfferDigestSize]byte]*cidoffer.CIDOffer
 	cidOffersLock sync.RWMutex
 	// Linked list of CID Group Offer message digests, in order of expiry time.
 	offerExpiry     *list.List
@@ -31,15 +31,15 @@ type Offers struct {
 
 type expiringOffers struct {
 	expiry      int64
-	offerDigest *[cidoffer.CidGroupOfferDigestSize]byte
+	offerDigest *[cidoffer.CIDOfferDigestSize]byte
 }
 
 // Create a new instance
 func newInstance() *Offers {
 	var o = Offers{}
-	o.cidMap = make(map[string][][cidoffer.CidGroupOfferDigestSize]byte)
+	o.cidMap = make(map[string][][cidoffer.CIDOfferDigestSize]byte)
 	o.cidMapLock = sync.RWMutex{}
-	o.cidOffers = make(map[[cidoffer.CidGroupOfferDigestSize]byte]*cidoffer.CidGroupOffer)
+	o.cidOffers = make(map[[cidoffer.CIDOfferDigestSize]byte]*cidoffer.CIDOffer)
 	o.cidOffersLock = sync.RWMutex{}
 	o.offerExpiry = list.New()
 	o.offerExpiryLock = sync.RWMutex{}
@@ -53,7 +53,7 @@ func GetSingleInstance() *Offers {
 
 // Add adds a new CID Offer to the offers system
 // Ignore the new offer if it already exists.
-func (o *Offers) Add(newOffer *cidoffer.CidGroupOffer) error {
+func (o *Offers) Add(newOffer *cidoffer.CIDOffer) error {
 	digest := newOffer.GetMessageDigest()
 	o.cidOffersLock.Lock()
 	_, exists := o.cidOffers[digest]
@@ -73,7 +73,7 @@ func (o *Offers) Add(newOffer *cidoffer.CidGroupOffer) error {
 	o.cidOffersLock.Unlock()
 
 	// Second: Add the CIDs to the map of CIDs to Offer digests
-	for _, aCid := range *newOffer.GetCIDs() {
+	for _, aCid := range newOffer.GetCIDs() {
 		cidStr := aCid.ToString()
 		// TODO: Would it be more efficient to do the locking outside of the loop?
 		// TODO: however, could this lock the map for too long?
@@ -103,13 +103,13 @@ func (o *Offers) Add(newOffer *cidoffer.CidGroupOffer) error {
 }
 
 // GetOffers returns an array of offers that exist for a CID
-func (o *Offers) GetOffers(cidRequested *cid.ContentID) (cidOffers []*cidoffer.CidGroupOffer, exists bool) {
-	var groupOfferDigests [][cidoffer.CidGroupOfferDigestSize]byte
+func (o *Offers) GetOffers(cidRequested *cid.ContentID) (cidOffers []*cidoffer.CIDOffer, exists bool) {
+	var groupOfferDigests [][cidoffer.CIDOfferDigestSize]byte
 	o.cidMapLock.Lock()
 	groupOfferDigests, exists = o.cidMap[cidRequested.ToString()]
 	o.cidMapLock.Unlock()
 
-	var setOfOffers []*cidoffer.CidGroupOffer
+	var setOfOffers []*cidoffer.CIDOffer
 	for _, groupOfferDigest := range groupOfferDigests {
 		setOfOffers = append(setOfOffers[:], o.cidOffers[groupOfferDigest])
 	}
@@ -123,7 +123,7 @@ func (o *Offers) ExpireOffers() {
 	now := util.GetTimeImpl().Now()
 	unixNow := now.Unix()
 
-	var expiredCidGroupDigests []*[cidoffer.CidGroupOfferDigestSize]byte
+	var expiredCidGroupDigests []*[cidoffer.CIDOfferDigestSize]byte
 
 	// Go through the list of CID Group digests to see if any have expired.
 	// Remove expired entries in the offerExpiry list.
@@ -145,7 +145,7 @@ func (o *Offers) ExpireOffers() {
 		cidOffer := o.cidOffers[*expiredCidGroupDigest]
 		o.cidOffersLock.Unlock()
 
-		for _, aCid := range *cidOffer.GetCIDs() {
+		for _, aCid := range cidOffer.GetCIDs() {
 			o.cidMapLock.Lock()
 			cidGroupOfferDigests := o.cidMap[aCid.ToString()]
 

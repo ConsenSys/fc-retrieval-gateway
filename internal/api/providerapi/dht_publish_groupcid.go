@@ -6,6 +6,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgpvd"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
@@ -16,9 +17,9 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	nonce, providerID, offers, err := fcrmessages.DecodeProviderDHTPublishGroupCIDRequest(request)
+	providerID, nonce, offers, err := fcrmsgpvd.DecodeProviderDHTPublishGroupCIDRequest(request)
 	if err != nil {
-		logging.Info("Provider publish cid offer dht request fail to decode.")
+		logging.Info("Provider publish dht offer request fail to decode.")
 		return nil
 	}
 
@@ -34,30 +35,14 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 		return err
 	}
 	// First verify the message
-	ok, err = request.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-		return fcrcrypto.VerifyMessage(pubKey, sig, msg)
-	})
-	if err != nil {
-		return err
-	}
-	if !ok {
+	if request.Verify(pubKey) != nil {
 		return errors.New("Fail to verify the request")
 	}
 
+	// Second Need to verify the offer one by one
 	for _, offer := range offers {
-		// Need to verify the offer one by one
-		ok, err = offer.VerifySignature(func(sig string, msg interface{}) (bool, error) {
-			return fcrcrypto.VerifyMessage(pubKey, sig, msg)
-		})
-
-		if err != nil {
-			logging.Error("Internal error in verifying the cid offer.")
-			continue
-		}
-
-		if !ok {
-			logging.Info("Offer does not pass verification.")
-			continue
+		if offer.Verify(pubKey) != nil {
+			return errors.New("Fail to verify the offer")
 		}
 
 		if g.Offers.Add(&offer) != nil {
@@ -74,14 +59,14 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 		return nil
 	}
 
-	response, err := fcrmessages.EncodeProviderDHTPublishGroupCIDAck(nonce, sig)
+	response, err := fcrmsgpvd.EncodeProviderPublishDHTOfferResponse(nonce, sig)
 	if err != nil {
 		logging.Error("Internal error in encoding message.")
 		return nil
 	}
 	// Sign the response
-	response.SignMessage(func(msg interface{}) (string, error) {
-		return fcrcrypto.SignMessage(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion, msg)
-	})
+	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+		return errors.New("Error in signing message")
+	}
 	return fcrtcpcomms.SendTCPMessage(conn, response, settings.DefaultTCPInactivityTimeout)
 }

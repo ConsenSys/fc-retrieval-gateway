@@ -62,7 +62,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 		}
 		// Respond to requests for a client's reputation.
 		if err == nil {
-			if message.MessageType == fcrmessages.AdminGetReputationChallengeType {
+			if message.GetMessageType() == fcrmessages.GatewayAdminGetReputationRequestType {
 				err = handleAdminGetReputationChallenge(conn, message)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection.
@@ -70,7 +70,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 					return
 				}
 				continue
-			} else if message.MessageType == fcrmessages.AdminSetReputationChallengeType {
+			} else if message.GetMessageType() == fcrmessages.GatewayAdminSetReputationRequestType {
 				err = handleAdminSetReputationChallenge(conn, message)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection.
@@ -78,7 +78,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway) {
 					return
 				}
 				continue
-			} else if message.MessageType == fcrmessages.AdminAcceptKeyChallengeType {
+			} else if message.GetMessageType() == fcrmessages.GatewayAdminInitialiseKeyRequestType {
 				var wg sync.WaitGroup
 				wg.Add(1)
 				err = handleAdminAcceptKeysChallenge(conn, message, &wg)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgpvd"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
@@ -17,7 +16,7 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	providerID, nonce, offers, err := fcrmsgpvd.DecodeProviderPublishDHTOfferRequest(request)
+	providerID, nonce, offers, err := fcrmessages.DecodeProviderPublishDHTOfferRequest(request)
 	if err != nil {
 		logging.Info("Provider publish dht offer request fail to decode.")
 		return nil
@@ -59,7 +58,7 @@ func handleProviderDHTPublishGroupCIDRequest(conn net.Conn, request *fcrmessages
 		return nil
 	}
 
-	response, err := fcrmsgpvd.EncodeProviderPublishDHTOfferResponse(nonce, sig)
+	response, err := fcrmessages.EncodeProviderPublishDHTOfferResponse(nonce, sig)
 	if err != nil {
 		logging.Error("Internal error in encoding message.")
 		return nil

@@ -6,8 +6,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggw"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgpvd"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
@@ -28,7 +26,7 @@ func RequestSingleCIDOffers(cidMin, cidMax *cid.ContentID, providerID *nodeid.No
 	pComm.CommsLock.Lock()
 	defer pComm.CommsLock.Unlock()
 	// Construct message
-	request, err := fcrmsggw.EncodeGatewayListDHTOfferRequest(
+	request, err := fcrmessages.EncodeGatewayListDHTOfferRequest(
 		g.GatewayID,
 		cidMin,
 		cidMax,
@@ -89,14 +87,14 @@ func AcknowledgeSingleCIDOffers(response *fcrmessages.FCRMessage, providerID *no
 	defer pComm.CommsLock.Unlock()
 
 	// Decode the response
-	cidOffers, err := fcrmsggw.DecodeGatewayListDHTOfferResponse(response)
+	cidOffers, err := fcrmessages.DecodeGatewayListDHTOfferResponse(response)
 	if err != nil {
 		return nil, err
 	}
 	// Construct the message
 	cidOfferAcks := make([]fcrmessages.FCRMessage, 0)
 	for _, cidOffer := range cidOffers {
-		_, nonce, _, err := fcrmsgpvd.DecodeProviderPublishDHTOfferRequest(&cidOffer)
+		_, nonce, _, err := fcrmessages.DecodeProviderPublishDHTOfferRequest(&cidOffer)
 		if err != nil {
 			return nil, err
 		}
@@ -105,13 +103,13 @@ func AcknowledgeSingleCIDOffers(response *fcrmessages.FCRMessage, providerID *no
 		if err != nil {
 			return nil, err
 		}
-		cidOfferAck, err := fcrmsgpvd.EncodeProviderPublishDHTOfferResponse(nonce, sig)
+		cidOfferAck, err := fcrmessages.EncodeProviderPublishDHTOfferResponse(nonce, sig)
 		if err != nil {
 			return nil, err
 		}
 		cidOfferAcks = append(cidOfferAcks, *cidOfferAck)
 	}
-	ack, err := fcrmsggw.EncodeGatewayListDHTOfferAck(cidOfferAcks)
+	ack, err := fcrmessages.EncodeGatewayListDHTOfferAck(cidOfferAcks)
 	if err != nil {
 		return nil, err
 	}

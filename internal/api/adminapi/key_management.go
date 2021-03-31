@@ -21,7 +21,6 @@ import (
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggwadmin"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
@@ -31,7 +30,7 @@ func handleAdminAcceptKeysChallenge(conn net.Conn, request *fcrmessages.FCRMessa
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	nodeID, privKey, privKeyVer, err := fcrmsggwadmin.DecodeGatewayAdminInitialiseKeyRequest(request)
+	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
 	if err != nil {
 		return err
 	}
@@ -42,7 +41,7 @@ func handleAdminAcceptKeysChallenge(conn net.Conn, request *fcrmessages.FCRMessa
 	wg.Done() // need mutex to protect g
 
 	// Construct messaqe
-	response, err := fcrmsggwadmin.EncodeGatewayAdminInitialiseKeyResponse(true)
+	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
 	if err != nil {
 		return err
 	}

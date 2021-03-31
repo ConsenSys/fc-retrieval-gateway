@@ -8,7 +8,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgpvd"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 )
@@ -18,7 +17,7 @@ func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FC
 	g := gateway.GetSingleInstance()
 
 	// TODO Add nonce, it looks like nonce is not needed
-	providerID, _, offer, err := fcrmsgpvd.DecodeProviderPublishGroupOfferRequest(request)
+	providerID, _, offer, err := fcrmessages.DecodeProviderPublishGroupOfferRequest(request)
 	if err != nil {
 		logging.Info("Provider publish group cid request fail to decode.")
 		return err
@@ -50,7 +49,7 @@ func handleProviderPublishGroupCIDRequest(conn net.Conn, request *fcrmessages.FC
 	}
 	logging.Info("Stored offers: %+v", g.Offers)
 
-	response, err := fcrmsgpvd.EncodeProviderPublishGroupOfferResponse(
+	response, err := fcrmessages.EncodeProviderPublishGroupOfferResponse(
 		*g.GatewayID,
 		offer.GetMessageDigest(),
 	)

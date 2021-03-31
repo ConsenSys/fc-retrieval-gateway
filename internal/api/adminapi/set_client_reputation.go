@@ -20,7 +20,6 @@ import (
 	"net"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggwadmin"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
@@ -34,7 +33,7 @@ func handleAdminSetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMe
 		return errors.New("This gateway hasn't been initialised by the admin")
 	}
 
-	clientID, reputataion, err := fcrmsggwadmin.DecodeGatewayAdminSetReputationRequest(request)
+	clientID, reputataion, err := fcrmessages.DecodeGatewayAdminSetReputationRequest(request)
 	if err != nil {
 		return err
 	}
@@ -50,7 +49,7 @@ func handleAdminSetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMe
 	}
 
 	// Construct messaqe
-	response, err := fcrmsggwadmin.EncodeGatewayAdminSetReputationResponse(clientID, currentRep, exists)
+	response, err := fcrmessages.EncodeGatewayAdminSetReputationResponse(clientID, currentRep, exists)
 	if err != nil {
 		return err
 	}

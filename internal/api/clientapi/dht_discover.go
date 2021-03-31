@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgclient"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/gatewayapi"
@@ -19,7 +18,7 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 	// Get core structure
 	g := gateway.GetSingleInstance()
 
-	cid, nonce, ttl, numDHT, _, _, _, err := fcrmsgclient.DecodeClientDHTDiscoverRequest(request)
+	cid, nonce, ttl, numDHT, _, _, _, err := fcrmessages.DecodeClientDHTDiscoverRequest(request)
 	if err != nil {
 		s := "Client DHT CID Discovery: Failed to decode payload."
 		logging.Error(s + err.Error())
@@ -69,7 +68,7 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 		}
 	}
 
-	response, err := fcrmsgclient.EncodeClientDHTDiscoverResponse(contacted, unContactable, nonce)
+	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, unContactable, nonce)
 	if err != nil {
 		s := "Internal error: Fail to encode response."
 		logging.Error(s + err.Error())

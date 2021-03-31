@@ -8,7 +8,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsggw"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
@@ -19,7 +18,7 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *fcrmessages.FCRMess
 	// Get the core structure
 	g := gateway.GetSingleInstance()
 
-	gatewayID, pieceCID, nonce, ttl, _, _, err := fcrmsggw.DecodeGatewayDHTDiscoverRequest(request)
+	gatewayID, pieceCID, nonce, ttl, _, _, err := fcrmessages.DecodeGatewayDHTDiscoverRequest(request)
 	if err != nil {
 		// Reply with invalid message
 		return fcrtcpcomms.SendInvalidMessage(conn, settings.DefaultTCPInactivityTimeout)
@@ -61,7 +60,7 @@ func handleGatewayDHTDiscoverRequest(conn net.Conn, request *fcrmessages.FCRMess
 	}
 
 	// Construct message
-	response, err := fcrmsggw.EncodeGatewayDHTDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
+	response, err := fcrmessages.EncodeGatewayDHTDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
 	if err != nil {
 		return err
 	}
@@ -86,7 +85,7 @@ func RequestGatewayDHTDiscover(cid *cid.ContentID, gatewayID *nodeid.NodeID) (*f
 	pComm.CommsLock.Lock()
 	defer pComm.CommsLock.Unlock()
 	// Construct message
-	request, err := fcrmsggw.EncodeGatewayDHTDiscoverRequest(g.GatewayID, cid, 1, time.Now().Add(10*time.Second).Unix(), "", "") // TODO, ADD nonce and TTL
+	request, err := fcrmessages.EncodeGatewayDHTDiscoverRequest(g.GatewayID, cid, 1, time.Now().Add(10*time.Second).Unix(), "", "") // TODO, ADD nonce and TTL
 	if err != nil {
 		return nil, err
 	}

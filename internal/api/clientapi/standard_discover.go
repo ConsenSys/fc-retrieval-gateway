@@ -6,7 +6,6 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages/fcrmsgclient"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
@@ -18,7 +17,7 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	// Get core structure
 	g := gateway.GetSingleInstance()
 
-	pieceCID, nonce, ttl, _, _, err := fcrmsgclient.DecodeClientStandardDiscoverRequest(request)
+	pieceCID, nonce, ttl, _, _, err := fcrmessages.DecodeClientStandardDiscoverRequest(request)
 	if err != nil {
 		s := "Client Standard CID Discovery: Failed to decode payload."
 		logging.Error(s + err.Error())
@@ -51,7 +50,7 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	}
 
 	// Construct response
-	response, err := fcrmsgclient.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
+	response, err := fcrmessages.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
 	if err != nil {
 		s := "Internal error: Error encoding payload."
 		logging.Error(s + err.Error())

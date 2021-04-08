@@ -88,6 +88,22 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway, settings s
 					return
 				}
 				continue
+			} else if message.GetMessageType() == fcrmessages.GatewayAdminEnrollGatewayRequestType {
+				err = handleAdminEnrollGateway(conn, message, settings)
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection.
+					logging.Error1(err)
+					return
+				}
+				continue
+			} else if message.GetMessageType() == fcrmessages.ProviderAdminEnrollProviderRequestType {
+				err = handleAdminEnrollProvider(conn, message, settings)
+				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
+					// Error in tcp communication, drop the connection.
+					logging.Error1(err)
+					return
+				}
+				continue
 			}
 		}
 

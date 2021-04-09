@@ -31,10 +31,6 @@ func parseUint8(value string) uint8 {
 
 // Map sets the config for the Gateway. NB: Gateways start without a private key. Private keys are provided by a gateway admin client.
 func Map(conf *viper.Viper) settings.AppSettings {
-	registerRefreshDuration, err := time.ParseDuration(conf.GetString("REGISTER_REFRESH_DURATION"))
-	if err != nil {
-		registerRefreshDuration = settings.DefaultRegisterRefreshDuration
-	}
 	tcpInactivityTimeout, err := time.ParseDuration(conf.GetString("TCP_INACTIVITY_TIMEOUT"))
 	if err != nil {
 		tcpInactivityTimeout = settings.DefaultTCPInactivityTimeout
@@ -58,20 +54,19 @@ func Map(conf *viper.Viper) settings.AppSettings {
 		LogCompress:     conf.GetBool("LOG_COMPRESS"),
 		GatewayID:       conf.GetString("GATEWAY_ID"),
 
-		RegisterAPIURL:        		conf.GetString("REGISTER_API_URL"),
-		RegisterRefreshDuration:	registerRefreshDuration,
-		
-		GatewayAddress:        	conf.GetString("GATEWAY_ADDRESS"),
-		NetworkInfoGateway:    	conf.GetString("IP") + ":" + conf.GetString("BIND_GATEWAY_API"),
-		GatewayRegionCode:     	conf.GetString("GATEWAY_REGION_CODE"),
-		GatewayRootSigningKey:	conf.GetString("GATEWAY_ROOT_SIGNING_KEY"),
-		GatewaySigningKey:     	conf.GetString("GATEWAY_SIGNING_KEY"),
+		RegisterAPIURL: conf.GetString("REGISTER_API_URL"),
+
+		GatewayAddress:        conf.GetString("GATEWAY_ADDRESS"),
+		NetworkInfoGateway:    conf.GetString("IP") + ":" + conf.GetString("BIND_GATEWAY_API"),
+		GatewayRegionCode:     conf.GetString("GATEWAY_REGION_CODE"),
+		GatewayRootSigningKey: conf.GetString("GATEWAY_ROOT_SIGNING_KEY"),
+		GatewaySigningKey:     conf.GetString("GATEWAY_SIGNING_KEY"),
 
 		NetworkInfoClient:   conf.GetString("IP") + ":" + conf.GetString("BIND_REST_API"),
 		NetworkInfoProvider: conf.GetString("IP") + ":" + conf.GetString("BIND_PROVIDER_API"),
 		NetworkInfoAdmin:    conf.GetString("IP") + ":" + conf.GetString("BIND_ADMIN_API"),
 
-		TCPInactivityTimeout: tcpInactivityTimeout,
+		TCPInactivityTimeout:     tcpInactivityTimeout,
 		TCPLongInactivityTimeout: tcpLongInactivityTimeout,
 	}
 }

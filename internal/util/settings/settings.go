@@ -19,6 +19,9 @@ import (
 	"time"
 )
 
+// DefaultRegisterRefreshDuration is the default register refresh duration
+const DefaultRegisterRefreshDuration = 5000 * time.Millisecond
+
 // DefaultTCPInactivityTimeout is the default timeout for TCP inactivity
 const DefaultTCPInactivityTimeout = 100 * time.Millisecond
 
@@ -41,12 +44,13 @@ type AppSettings struct {
 	LogCompress     bool   `mapstructure:"LOG_COMPRESS"`      // Log compress: false
 	GatewayID       string `mapstructure:"GATEWAY_ID"`        // Node id of this gateway
 
-	RegisterAPIURL        string `mapstructure:"REGISTER_API_URL"`         // Register service url
-	GatewayAddress        string `mapstructure:"GATEWAY_ADDRESS"`          // Gateway address
-	NetworkInfoGateway    string `mapstructure:"GATEWAY_NETWORK_INFO"`     // Gateway network info
-	GatewayRegionCode     string `mapstructure:"GATEWAY_REGION_CODE"`      // Gateway region code
-	GatewayRootSigningKey string `mapstructure:"GATEWAY_ROOT_SIGNING_KEY"` // Gateway root signing key
-	GatewaySigningKey     string `mapstructure:"GATEWAY_SIGNING_KEY"`      // Gateway signing key
+	RegisterAPIURL          string        `mapstructure:"REGISTER_API_URL"`          // Register service url
+	RegisterRefreshDuration time.Duration `mapstructure:"REGISTER_REFRESH_DURATION"` // Register refresh duration
+	GatewayAddress          string        `mapstructure:"GATEWAY_ADDRESS"`           // Gateway address
+	NetworkInfoGateway      string        `mapstructure:"GATEWAY_NETWORK_INFO"`      // Gateway network info
+	GatewayRegionCode       string        `mapstructure:"GATEWAY_REGION_CODE"`       // Gateway region code
+	GatewayRootSigningKey   string        `mapstructure:"GATEWAY_ROOT_SIGNING_KEY"`  // Gateway root signing key
+	GatewaySigningKey       string        `mapstructure:"GATEWAY_SIGNING_KEY"`       // Gateway signing key
 
 	NetworkInfoClient   string `mapstructure:"CLIENT_NETWORK_INFO"`   // Gateway client network info
 	NetworkInfoProvider string `mapstructure:"PROVIDER_NETWORK_INFO"` // Gateway provider network info

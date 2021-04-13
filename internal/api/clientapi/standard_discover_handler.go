@@ -18,6 +18,7 @@ package clientapi
 import (
 	"net/http"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
@@ -25,31 +26,47 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleClientNetworkEstablishment is used to handle initial establishment http request from client
-func handleClientNetworkEstablishment(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// handleClientStandardCIDDiscoverRequest is used to handle client request for cid offer
+func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 
-	clientID, challenge, ttl, err := fcrmessages.DecodeClientEstablishmentRequest(request)
+	pieceCID, nonce, ttl, _, _, err := fcrmessages.DecodeClientStandardDiscoverRequest(request)
 	if err != nil {
-		s := "Client Establishment: Failed to decode payload."
+		s := "Client Standard CID Discovery: Failed to decode payload."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
 
-	logging.Trace("Client Establishment from %s with challenge %s and ttl %d", clientID.ToString(), challenge, ttl)
-
 	now := util.GetTimeImpl().Now().Unix()
 	if now > ttl {
-		// TODO how to just drop the connection?
+		// Drop the connection
 		return
 	}
 
-	// Construct message
-	response, err := fcrmessages.EncodeClientEstablishmentResponse(c.GatewayID, challenge)
+	// Search for offesr.
+	offers, exists := c.Offers.GetOffers(pieceCID)
+
+	suboffers := make([]cidoffer.SubCIDOffer, 0)
+	fundedPaymentChannel := make([]bool, 0)
+
+	for _, offer := range offers {
+		suboffer, err := offer.GenerateSubCIDOffer(pieceCID)
+		if err != nil {
+			s := "Internal error: Error generating suboffer."
+			logging.Error(s + err.Error())
+			rest.Error(w, s, http.StatusBadRequest)
+			return
+		}
+		suboffers = append(suboffers, *suboffer)
+		fundedPaymentChannel = append(fundedPaymentChannel, false) // TODO, Need to find a way to check if having payment channel set up for a given provider.
+	}
+
+	// Construct response
+	response, err := fcrmessages.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
 	if err != nil {
-		s := "Client Establishment: Error encoding payload."
+		s := "Internal error: Error encoding payload."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return

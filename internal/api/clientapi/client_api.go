@@ -107,11 +107,11 @@ func msgRouter(w rest.ResponseWriter, r *rest.Request) {
 
 	switch request.GetMessageType() {
 	case fcrmessages.ClientEstablishmentRequestType:
-		handleClientNetworkEstablishment(w, request)
+		handleClientEstablishmentRequest(w, request)
 	case fcrmessages.ClientStandardDiscoverRequestType:
-		handleClientStandardCIDDiscover(w, request)
+		handleClientStandardCIDDiscoverRequest(w, request)
 	case fcrmessages.ClientDHTDiscoverRequestType:
-		handleClientDHTCIDDiscover(w, request)
+		handleClientDHTCIDDiscoverRequest(w, request)
 	default:
 		logging.Warn("Client Request: Unknown message type: %d", request.GetMessageType())
 		rest.Error(w, "Unknown message type", http.StatusBadRequest)

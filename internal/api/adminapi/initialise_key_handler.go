@@ -21,42 +21,35 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleAdminGetReputationChallenge handles admin get reputation challenge
-func handleAdminGetReputationChallenge(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
-	// Get core structure
+// handleGatewayAdminInitialiseKeyRequest handles admin initilise key request
+func handleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+	// Get the core structure
 	c := core.GetSingleInstance()
 
-	if c.GatewayPrivateKey == nil {
-		s := "This gateway hasn't been initialised by the admin"
-		logging.Error(s)
-		rest.Error(w, s, http.StatusBadRequest)
-		return
-	}
-
-	clientID, err := fcrmessages.DecodeGatewayAdminGetReputationRequest(request)
+	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
 	if err != nil {
-		s := "Admin Get Reputation: Failed to decode payload."
+		s := "Admin Accept Keys Challenge: Failed to decode payload."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
 
-	// Get reputation db
-	rep := reputation.GetSingleInstance()
-	reputation, exists := rep.GetClientReputation(clientID)
+	c.GatewayID = nodeID
+	c.GatewayPrivateKey = privKey
+	c.GatewayPrivateKeyVersion = privKeyVer
 
-	// Construct message
-	response, err := fcrmessages.EncodeGatewayAdminGetReputationResponse(clientID, reputation, exists)
+	// Construct messaqe
+	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
 	if err != nil {
 		s := "Internal error: Fail to encode response."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
+
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
 		s := "Internal error."
@@ -64,5 +57,6 @@ func handleAdminGetReputationChallenge(w rest.ResponseWriter, request *fcrmessag
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
+	// Send message
 	w.WriteJson(response)
 }

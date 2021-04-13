@@ -83,12 +83,12 @@ func msgRouter(w rest.ResponseWriter, r *rest.Request) {
 	*/
 
 	switch request.GetMessageType() {
-	case fcrmessages.GatewayAdminGetReputationRequestType:
-		handleAdminGetReputationChallenge(w, request)
-	case fcrmessages.GatewayAdminSetReputationRequestType:
-		handleAdminSetReputationChallenge(w, request)
 	case fcrmessages.GatewayAdminInitialiseKeyRequestType:
-		handleAdminAcceptKeysChallenge(w, request)
+		handleGatewayAdminInitialiseKeyRequest(w, request)
+	case fcrmessages.GatewayAdminGetReputationRequestType:
+		handleGatewayAdminGetReputationRequest(w, request)
+	case fcrmessages.GatewayAdminSetReputationRequestType:
+		handleGatewayAdminSetReputationRequest(w, request)
 	default:
 		logging.Warn("Client Request: Unknown message type: %d", request.GetMessageType())
 		rest.Error(w, "Unknown message type", http.StatusBadRequest)

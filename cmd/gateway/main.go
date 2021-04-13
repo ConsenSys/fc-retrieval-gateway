@@ -31,6 +31,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
+// Start Gateway service
 func main() {
 	conf := config.NewConfig()
 	appSettings := config.Map(conf)
@@ -81,6 +82,7 @@ func main() {
 	select {}
 }
 
+// gracefulExit handles exit
 func gracefulExit() {
 	logging.Info("Filecoin Gateway Shutdown: Start")
 

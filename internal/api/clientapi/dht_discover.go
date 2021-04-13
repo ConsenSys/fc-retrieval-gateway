@@ -1,6 +1,20 @@
 package clientapi
 
-// Copyright (C) 2020 ConsenSys Software Inc
+/*
+ * Copyright 2020 ConsenSys Software Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import (
 	"net/http"
 	"time"
@@ -8,16 +22,14 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/gatewayapi"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// HandleClientDHTCIDDiscover is used to handle client request for cid offer
-func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRMessage, settings settings.AppSettings) {
+// handleClientDHTCIDDiscover is used to handle client request for cid offer
+func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
-	g := gateway.GetSingleInstance()
+	c := core.GetSingleInstance()
 
 	cid, nonce, ttl, numDHT, _, _, _, err := fcrmessages.DecodeClientDHTDiscoverRequest(request)
 	if err != nil {
@@ -32,28 +44,26 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 		// Message expired.
 		return
 	}
-	// Use DHT to get response.
-	g.RegisteredGatewaysMapLock.RLock()
-	defer g.RegisteredGatewaysMapLock.RUnlock()
-
-	if len(g.RegisteredGatewaysMap) < int(numDHT) {
-		s := "Gateway does not store enough peers."
+	// Get a list of gatewayIDs to contact
+	gateways, err := c.RegisterMgr.GetGatewaysNearCID(cid, int(numDHT))
+	if err != nil || len(gateways) != int(numDHT) {
+		s := "Gateway fails to obtain required amount of peers."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
-	gatewayIDs := make([]*nodeid.NodeID, int(numDHT))
-
-	// TODO: Need to add an algorithm to select gateways from the map.
-	// For now, it is random.
-	i := 0
-	for k := range g.RegisteredGatewaysMap {
-		if i >= int(numDHT) {
-			break
+	gatewayIDs := make([]*nodeid.NodeID, 0)
+	for _, gateway := range gateways {
+		id, err := nodeid.NewNodeIDFromHexString(gateway.NodeID)
+		if err != nil {
+			s := "Gateway fails to generate node id."
+			logging.Error(s + err.Error())
+			rest.Error(w, s, http.StatusBadRequest)
+			return
 		}
-		gatewayIDs[i], _ = nodeid.NewNodeIDFromHexString(k)
-		i++
+		gatewayIDs = append(gatewayIDs, id)
 	}
+
 	// Construct response
 	// TODO: Right now, it ignores the incremental result filed.
 	// Will return all in one message.
@@ -61,7 +71,7 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 	contacted := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for _, id := range gatewayIDs {
-		res, err := gatewayapi.RequestGatewayDHTDiscover(cid, id, settings)
+		res, err := c.GatewayServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestType, cid, id)
 		if err != nil {
 			unContactable = append(unContactable, *id)
 		} else {
@@ -79,7 +89,7 @@ func handleClientDHTCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRM
 
 	// Sign the message
 	// Sign message
-	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
 		s := "Internal error."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)

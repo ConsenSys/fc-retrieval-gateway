@@ -1,6 +1,19 @@
 package clientapi
 
-// Copyright (C) 2020 ConsenSys Software Inc
+/*
+ * Copyright 2020 ConsenSys Software Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import (
 	"io/ioutil"
@@ -8,7 +21,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 	"github.com/ant0ine/go-json-rest/rest"
 )
@@ -16,50 +29,26 @@ import (
 // StartClientRestAPI starts the REST API as a separate go routine.
 // Any start-up errors are returned.
 func StartClientRestAPI(settings settings.AppSettings) error {
-	// Start the REST API and block until the error code is set.
-	errChan := make(chan error, 1)
-	go startRestAPI(settings, errChan)
-	return <-errChan
-}
-
-func startRestAPI(settings settings.AppSettings, errChannel chan<- error) {
 	api := rest.NewApi()
 	api.Use(rest.DefaultDevStack...)
-	m := NewMsgRouter(&settings)
 	router, err := rest.MakeRouter(
-		// TODO: Remove these debug APIs prior to production release.
-		rest.Get("/time", getTime),     // Get system time.
-		rest.Get("/ip", getIP),         // Get IP address.
-		rest.Get("/host", getHostname), // Get host name.
-
-		rest.Post("/v1", m.msgRouter),
+		rest.Post("/v1", msgRouter),
 	)
 	if err != nil {
-		logging.Error1(err)
-		errChannel <- err
-		return
+		return err
 	}
-
-	logging.Info("Running REST API on: %s", settings.BindRestAPI)
 	api.SetApp(router)
-	errChannel <- nil
-	logging.Error(http.ListenAndServe(":"+settings.BindRestAPI, api.MakeHandler()).Error())
-	panic("Error binding")
-}
-
-type MsgRouter struct {
-	settings *settings.AppSettings
-}
-
-func NewMsgRouter(settings *settings.AppSettings) *MsgRouter{
-	return &MsgRouter{
-		settings: settings,
+	err = http.ListenAndServe(":"+settings.BindRestAPI, api.MakeHandler())
+	if err != nil {
+		return err
 	}
+	return nil
 }
 
-func (m *MsgRouter) msgRouter(w rest.ResponseWriter, r *rest.Request) {
+// msgRouter routes message
+func msgRouter(w rest.ResponseWriter, r *rest.Request) {
 	// Get core structure
-	g := gateway.GetSingleInstance()
+	c := core.GetSingleInstance()
 
 	logging.Trace("Received request via /v1 API")
 	content, err := ioutil.ReadAll(r.Body)
@@ -82,14 +71,14 @@ func (m *MsgRouter) msgRouter(w rest.ResponseWriter, r *rest.Request) {
 	}
 
 	// Only process the rest of the message if the protocol version is understood.
-	if request.GetProtocolVersion() != g.ProtocolVersion {
+	if request.GetProtocolVersion() != c.ProtocolVersion {
 		// Check to see if the client supports the gateway's preferred version
 		for _, clientProvVer := range request.GetProtocolSupported() {
-			if clientProvVer == g.ProtocolVersion {
+			if clientProvVer == c.ProtocolVersion {
 				// Request the client switch to this protocol version
 				// TODO what can we get from request object?
-				logging.Info("Requesting client (TODO) switch protocol versions from %d to %d", request.GetProtocolVersion(), g.ProtocolVersion)
-				response, _ := fcrmessages.EncodeProtocolChangeRequest(g.ProtocolVersion)
+				logging.Info("Requesting client (TODO) switch protocol versions from %d to %d", request.GetProtocolVersion(), c.ProtocolVersion)
+				response, _ := fcrmessages.EncodeProtocolChangeRequest(c.ProtocolVersion)
 				w.WriteJson(response)
 				return
 			}
@@ -99,7 +88,7 @@ func (m *MsgRouter) msgRouter(w rest.ResponseWriter, r *rest.Request) {
 		// gateway to search for any common version, prioritising
 		// the gateway preference over the client preference.
 		for _, clientProvVer := range request.GetProtocolSupported() {
-			for _, gatewayProtVer := range g.ProtocolSupported {
+			for _, gatewayProtVer := range c.ProtocolSupported {
 				if clientProvVer == gatewayProtVer {
 					// When we support more than one version of the protocol, this code will change the gateway
 					// to using the other (common version)
@@ -122,7 +111,7 @@ func (m *MsgRouter) msgRouter(w rest.ResponseWriter, r *rest.Request) {
 	case fcrmessages.ClientStandardDiscoverRequestType:
 		handleClientStandardCIDDiscover(w, request)
 	case fcrmessages.ClientDHTDiscoverRequestType:
-		handleClientDHTCIDDiscover(w, request, *m.settings)
+		handleClientDHTCIDDiscover(w, request)
 	default:
 		logging.Warn("Client Request: Unknown message type: %d", request.GetMessageType())
 		rest.Error(w, "Unknown message type", http.StatusBadRequest)

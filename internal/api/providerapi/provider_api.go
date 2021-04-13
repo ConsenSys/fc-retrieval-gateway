@@ -1,75 +1,40 @@
 package providerapi
 
-import (
-	"net"
+/*
+ * Copyright 2020 ConsenSys Software Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
 // StartProviderAPI starts the TCP API as a separate go routine.
 func StartProviderAPI(settings settings.AppSettings) error {
+	// Get core structure
+	c := core.GetSingleInstance()
+
+	// Initialise a new P2P Server
+	c.ProviderServer = fcrp2pserver.NewFCRP2PServer("provider-server", c.RegisterMgr, settings.TCPInactivityTimeout)
+
+	// Add handlers
+	c.ProviderServer.
+		AddHandler(fcrmessages.ProviderPublishGroupOfferRequestType, handleProviderPublishGroupOfferRequest).
+		AddHandler(fcrmessages.ProviderPublishDHTOfferRequestType, handleProviderPublishDHTOfferRequest)
+
 	// Start server
-	ln, err := net.Listen("tcp", ":"+settings.BindProviderAPI)
-	if err != nil {
-		return err
-	}
-	go func(ln net.Listener) {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				logging.Error(err.Error())
-				continue
-			}
-			logging.Info("Incoming connection from provider at :%s\n", conn.RemoteAddr())
-			go handleIncomingProviderConnection(conn, settings)
-		}
-	}(ln)
-	logging.Info("Listening on %s for connections from Providers\n", settings.BindProviderAPI)
-	return nil
-}
-
-func handleIncomingProviderConnection(conn net.Conn, settings settings.AppSettings) {
-	// Close connection on exit.
-	defer conn.Close()
-
-	// Loop until error occurs and connection is dropped.
-	for {
-		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.TCPInactivityTimeout)
-
-		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-			// Error in tcp communication, drop the connection.
-			logging.Error(err.Error())
-			return
-		}
-		if err == nil {
-			logging.Info("Message received: %+v", message)
-			if message.GetMessageType() == fcrmessages.ProviderPublishGroupOfferRequestType {
-				err = handleProviderPublishGroupCIDRequest(conn, message, settings)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection
-					logging.Error(err.Error())
-					return
-				}
-				continue
-			} else if message.GetMessageType() == fcrmessages.ProviderPublishDHTOfferRequestType {
-				err = handleProviderDHTPublishGroupCIDRequest(conn, message, settings)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection
-					logging.Error(err.Error())
-					return
-				}
-				continue
-			}
-			// Message is invalid.
-			err = fcrtcpcomms.SendInvalidMessage(conn, settings.TCPInactivityTimeout)
-			if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-				// Error in tcp communication, drop the connection.
-				logging.Error(err.Error())
-				return
-			}
-		}
-	}
+	return c.ProviderServer.Start(settings.BindProviderAPI)
 }

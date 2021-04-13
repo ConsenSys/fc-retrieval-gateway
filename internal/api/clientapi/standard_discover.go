@@ -1,21 +1,35 @@
 package clientapi
 
-// Copyright (C) 2020 ConsenSys Software Inc
+/*
+ * Copyright 2020 ConsenSys Software Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import (
 	"net/http"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// HandleClientStandardCIDDiscover is used to handle client request for cid offer
+// handleClientStandardCIDDiscover is used to handle client request for cid offer
 func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
-	g := gateway.GetSingleInstance()
+	c := core.GetSingleInstance()
 
 	pieceCID, nonce, ttl, _, _, err := fcrmessages.DecodeClientStandardDiscoverRequest(request)
 	if err != nil {
@@ -32,7 +46,7 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	}
 
 	// Search for offesr.
-	offers, exists := g.Offers.GetOffers(pieceCID)
+	offers, exists := c.Offers.GetOffers(pieceCID)
 
 	suboffers := make([]cidoffer.SubCIDOffer, 0)
 	fundedPaymentChannel := make([]bool, 0)
@@ -59,7 +73,7 @@ func handleClientStandardCIDDiscover(w rest.ResponseWriter, request *fcrmessages
 	}
 
 	// Sign message
-	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
+	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
 		s := "Internal error."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)

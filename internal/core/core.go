@@ -1,16 +1,16 @@
-package gateway
+package core
 
 import (
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmerkletree"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/offers"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
-	"github.com/ConsenSys/fc-retrieval-register/pkg/register"
 )
 
 const (
@@ -18,10 +18,14 @@ const (
 	protocolSupported = 1 // Alternative protocol version
 )
 
-// Gateway holds the main data structure for the whole gateway.
-type Gateway struct {
+// Core holds the main data structure for the whole gateway.
+type Core struct {
+	// Protocol versions of this gateway
 	ProtocolVersion   int32
 	ProtocolSupported []int32
+
+	// Settings
+	Settings *settings.AppSettings
 
 	// GatewayID of this gateway
 	GatewayID *nodeid.NodeID
@@ -32,19 +36,14 @@ type Gateway struct {
 	// GatewayPrivateKeyVersion is the key version number of the private key.
 	GatewayPrivateKeyVersion *fcrcrypto.KeyVersion
 
-	// RegisteredGatewaysMap stores mapping from gateway id (big int in string repr) to its registration info
-	RegisteredGatewaysMap     map[string]register.RegisteredNode
-	RegisteredGatewaysMapLock sync.RWMutex
+	// RegisterMgr manages all register related activities
+	RegisterMgr *fcrregistermgr.FCRRegisterMgr
 
-	// RegisteredProvidersMap stores mapping from provider id (big int in string repr) to its registration info
-	RegisteredProvidersMap     map[string]register.RegisteredNode
-	RegisteredProvidersMapLock sync.RWMutex
+	// GatewayServer handles all communication to/from gateways
+	GatewayServer *fcrp2pserver.FCRP2PServer
 
-	// GatewayCommPool manages connection for outgoing request to gateways
-	GatewayCommPool *fcrtcpcomms.CommunicationPool
-
-	// ProviderCommPool manages connection for outgoing request to providers
-	ProviderCommPool *fcrtcpcomms.CommunicationPool
+	// ProviderServer handles all communication to/from providers
+	ProviderServer *fcrp2pserver.FCRP2PServer
 
 	// Offers, it is threadsafe.
 	Offers *offers.Offers
@@ -60,11 +59,11 @@ type Gateway struct {
 }
 
 // Single instance of the gateway
-var instance *Gateway
+var instance *Core
 var doOnce sync.Once
 
 // GetSingleInstance returns the single instance of the gateway
-func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
+func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 	doOnce.Do(func() {
 		if len(confs) == 0 {
 			logging.ErrorAndPanic("No settings supplied to Gateway start-up")
@@ -72,31 +71,20 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		if len(confs) != 1 {
 			logging.ErrorAndPanic("More than one sets of settings supplied to Gateway start-up")
 		}
-		conf := confs[0]
 
-		gatewayID, err := nodeid.NewNodeIDFromHexString(conf.GatewayID)
-		if err != nil {
-			logging.ErrorAndPanic("Error decoding node id: %s", err)
-		}
-
-		instance = &Gateway{
+		instance = &Core{
 			ProtocolVersion:                protocolVersion,
 			ProtocolSupported:              []int32{protocolVersion, protocolSupported},
-			RegisteredGatewaysMap:          make(map[string]register.RegisteredNode),
-			RegisteredGatewaysMapLock:      sync.RWMutex{},
-			RegisteredProvidersMap:         make(map[string]register.RegisteredNode),
-			RegisteredProvidersMapLock:     sync.RWMutex{},
+			Settings:                       confs[0],
+			GatewayID:                      nil,
 			GatewayPrivateKey:              nil,
 			GatewayPrivateKeyVersion:       nil,
-			GatewayID:                      gatewayID,
 			Offers:                         offers.GetSingleInstance(),
 			RegistrationBlockHash:          "TODO",
 			RegistrationTransactionReceipt: "TODO",
 			RegistrationMerkleRoot:         "TODO",
 			RegistrationMerkleProof:        nil, //TODO
 		}
-		instance.GatewayCommPool = fcrtcpcomms.NewCommunicationPool(&instance.RegisteredGatewaysMap, &instance.RegisteredGatewaysMapLock)
-		instance.ProviderCommPool = fcrtcpcomms.NewCommunicationPool(&instance.RegisteredProvidersMap, &instance.RegisteredProvidersMapLock)
 	})
 	return instance
 }

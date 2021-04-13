@@ -16,99 +16,81 @@ package adminapi
  */
 
 import (
-	"net"
-	"sync"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
 // StartAdminAPI starts the TCP API as a separate go routine.
-func StartAdminAPI(settings settings.AppSettings, g *gateway.Gateway) error {
-	// Start server
-	ln, err := net.Listen("tcp", ":"+settings.BindAdminAPI)
+func StartAdminAPI(settings settings.AppSettings) error {
+	api := rest.NewApi()
+	api.Use(rest.DefaultDevStack...)
+	router, err := rest.MakeRouter(
+		rest.Post("/v1", msgRouter),
+	)
 	if err != nil {
 		return err
 	}
-	go func(ln net.Listener) {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				logging.Error1(err)
-				continue
-			}
-			logging.Info("Incoming connection from admin client at :%s", conn.RemoteAddr())
-			go handleIncomingAdminConnection(conn, g, settings)
-		}
-	}(ln)
-	logging.Info("Listening on %s for connections from admin clients", settings.BindAdminAPI)
+	api.SetApp(router)
+	err = http.ListenAndServe(":"+settings.BindAdminAPI, api.MakeHandler())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway, settings settings.AppSettings) {
-	// Close connection on exit.
-	defer conn.Close()
+// msgRouter routes message
+func msgRouter(w rest.ResponseWriter, r *rest.Request) {
+	logging.Trace("Received request via /v1 API")
+	content, err := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		logging.Error("Error reading request: %s.", err.Error())
+		rest.Error(w, "Error reading request", http.StatusBadRequest)
+		return
+	}
+	if len(content) == 0 {
+		logging.Error("Error empty request")
+		rest.Error(w, "Error empty request", http.StatusBadRequest)
+		return
+	}
+	request, err := fcrmessages.FCRMsgFromBytes(content)
+	if err != nil {
+		logging.Error("Failed to decode payload: %s.", err.Error())
+		rest.Error(w, "Failed to decode payload: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	// Loop until error occurs and connection is dropped.
-	for {
-		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.TCPInactivityTimeout)
-		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-			// Error in tcp communication, drop the connection.
-			logging.Error1(err)
-			return
-		}
-		// Respond to requests for a client's reputation.
-		if err == nil {
-			if message.GetMessageType() == fcrmessages.GatewayAdminGetReputationRequestType {
-				err = handleAdminGetReputationChallenge(conn, message, settings)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection.
-					logging.Error1(err)
-					return
-				}
-				continue
-			} else if message.GetMessageType() == fcrmessages.GatewayAdminSetReputationRequestType {
-				err = handleAdminSetReputationChallenge(conn, message, settings)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection.
-					logging.Error1(err)
-					return
-				}
-				continue
-			} else if message.GetMessageType() == fcrmessages.GatewayAdminInitialiseKeyRequestType {
-				var wg sync.WaitGroup
-				wg.Add(1)
-				err = handleAdminAcceptKeysChallenge(conn, message, &wg, settings)
-				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection.
-					logging.Error1(err)
-					return
-				}
-				continue
-			}
-		}
+	/*
+		TODO: Add additional message types:
+		✔︎ Get a client's reputation.
+		- Set reputation of client arbitrarily.
+		- Set reputation of client based on various actions (e.g. using existing functionality).
+		- Set reputation of other gateway.
+		- Set reputation of provider.
+		- Get id of random client (for testing purposes).
+		- Remove Piece CID offers from the standard cache.
+		- Remove Piece CID offers from the DHT cache.
+		- Remove all Piece CID offers from a certain provider from the standard or DHT cache.
+		✔︎ generate a key pair for the gateway.
+			- The API should have an optional parameter which
+		is protocol version.
+		- Store the private key in a runtime var (TODONEXT)
+	*/
 
-		/*
-			   TODO: Add additional message types:
-			   ✔︎ Get a client's reputation.
-			   - Set reputation of client arbitrarily.
-			   - Set reputation of client based on various actions (e.g. using existing functionality).
-			   - Set reputation of other gateway.
-			   - Set reputation of provider.
-			   - Get id of random client (for testing purposes).
-			   - Remove Piece CID offers from the standard cache.
-			   - Remove Piece CID offers from the DHT cache.
-			   - Remove all Piece CID offers from a certain provider from the standard or DHT cache.
-			   ✔︎ generate a key pair for the gateway.
-				 - The API should have an optional parameter which
-				is protocol version.
-				- Store the private key in a runtime var (TODONEXT)
-		*/
-
-		// Message is invalid.
-		fcrtcpcomms.SendInvalidMessage(conn, settings.TCPInactivityTimeout)
+	switch request.GetMessageType() {
+	case fcrmessages.GatewayAdminGetReputationRequestType:
+		handleAdminGetReputationChallenge(w, request)
+	case fcrmessages.GatewayAdminSetReputationRequestType:
+		handleAdminSetReputationChallenge(w, request)
+	case fcrmessages.GatewayAdminInitialiseKeyRequestType:
+		handleAdminAcceptKeysChallenge(w, request)
+	default:
+		logging.Warn("Client Request: Unknown message type: %d", request.GetMessageType())
+		rest.Error(w, "Unknown message type", http.StatusBadRequest)
 	}
 }

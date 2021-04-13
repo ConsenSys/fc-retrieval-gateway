@@ -16,40 +16,47 @@ package adminapi
  */
 
 import (
-	"errors"
-	"net"
-	"sync"
+	"net/http"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
-func handleAdminAcceptKeysChallenge(conn net.Conn, request *fcrmessages.FCRMessage, wg *sync.WaitGroup, settings settings.AppSettings) error {
+// handleAdminAcceptKeysChallenge handles admin accept keys challenge
+func handleAdminAcceptKeysChallenge(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get the core structure
-	g := gateway.GetSingleInstance()
+	c := core.GetSingleInstance()
 
 	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
 	if err != nil {
-		return err
+		s := "Admin Accept Keys Challenge: Failed to decode payload."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusBadRequest)
+		return
 	}
 
-	g.GatewayID = nodeID
-	g.GatewayPrivateKey = privKey
-	g.GatewayPrivateKeyVersion = privKeyVer
-	wg.Done() // need mutex to protect g
+	c.GatewayID = nodeID
+	c.GatewayPrivateKey = privKey
+	c.GatewayPrivateKeyVersion = privKeyVer
 
 	// Construct messaqe
 	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
 	if err != nil {
-		return err
+		s := "Internal error: Fail to encode response."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusInternalServerError)
+		return
 	}
 
 	// Sign message
-	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
-		return errors.New("Error in signing message")
+	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
+		s := "Internal error."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusInternalServerError)
+		return
 	}
 	// Send message
-	return fcrtcpcomms.SendTCPMessage(conn, response, settings.TCPInactivityTimeout)
+	w.WriteJson(response)
 }

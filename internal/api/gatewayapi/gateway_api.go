@@ -1,68 +1,41 @@
 package gatewayapi
 
-// Copyright (C) 2020 ConsenSys Software Inc
+/*
+ * Copyright 2020 ConsenSys Software Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import (
-	"net"
-
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
 // StartGatewayAPI starts the TCP API as a separate go routine.
 func StartGatewayAPI(settings settings.AppSettings) error {
+	// Get core structure
+	c := core.GetSingleInstance()
+
+	// Initialise a new P2P Server
+	c.GatewayServer = fcrp2pserver.NewFCRP2PServer("gateway-server", c.RegisterMgr, settings.TCPInactivityTimeout)
+
+	// Add handlers
+	c.GatewayServer.
+		AddHandler(fcrmessages.GatewayDHTDiscoverRequestType, handleGatewayDHTDiscoverRequest).
+		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, requestGatewayDHTDiscover).
+		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, requestListCIDOffers)
+
 	// Start server
-	ln, err := net.Listen("tcp", ":"+settings.BindGatewayAPI)
-	if err != nil {
-		return err
-	}
-	go func(ln net.Listener) {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				logging.Error1(err)
-				continue
-			}
-			logging.Info("Incoming connection from gateway at :%s", conn.RemoteAddr())
-			go handleIncomingGatewayConnection(conn, settings)
-		}
-	}(ln)
-	logging.Info("Listening on %s for connections from Gateways", settings.BindGatewayAPI)
-
-	return nil
-}
-
-func handleIncomingGatewayConnection(conn net.Conn, settings settings.AppSettings) {
-	// Close connection on exit.
-	defer conn.Close()
-
-	// Loop until error occurs and connection is dropped.
-	for {
-		message, err := fcrtcpcomms.ReadTCPMessage(conn, settings.TCPInactivityTimeout)
-		if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-			// Error in tcp communication, drop the connection.
-			logging.Error1(err)
-			return
-		}
-		if err == nil {
-			if message.GetMessageType() == fcrmessages.GatewayDHTDiscoverRequestType {
-				err = handleGatewayDHTDiscoverRequest(conn, message, settings)
-				if err != nil && fcrtcpcomms.IsTimeoutError(err) {
-					// Error in tcp communication, drop the connection
-					logging.Error1(err)
-					return
-				}
-				continue
-			}
-			// Message is invalid.
-			err = fcrtcpcomms.SendInvalidMessage(conn, settings.TCPInactivityTimeout)
-			if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
-				// Error in tcp communication, drop the connection.
-				logging.Error1(err)
-				return
-			}
-		}
-	}
+	return c.GatewayServer.Start(settings.BindGatewayAPI)
 }

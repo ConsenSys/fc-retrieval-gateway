@@ -16,26 +16,33 @@ package adminapi
  */
 
 import (
-	"errors"
-	"net"
+	"net/http"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
-func handleAdminSetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMessage, settings settings.AppSettings) error {
+// handleAdminSetReputationChallenge handles admin set reputation challenge
+func handleAdminSetReputationChallenge(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
-	g := gateway.GetSingleInstance()
-	if g.GatewayPrivateKey == nil {
-		return errors.New("This gateway hasn't been initialised by the admin")
+	c := core.GetSingleInstance()
+
+	if c.GatewayPrivateKey == nil {
+		s := "This gateway hasn't been initialised by the admin"
+		logging.Error(s)
+		rest.Error(w, s, http.StatusBadRequest)
+		return
 	}
 
 	clientID, reputataion, err := fcrmessages.DecodeGatewayAdminSetReputationRequest(request)
 	if err != nil {
-		return err
+		s := "Admin Set Reputation: Failed to decode payload."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusBadRequest)
+		return
 	}
 
 	// Get reputation db
@@ -51,12 +58,17 @@ func handleAdminSetReputationChallenge(conn net.Conn, request *fcrmessages.FCRMe
 	// Construct messaqe
 	response, err := fcrmessages.EncodeGatewayAdminSetReputationResponse(clientID, currentRep, exists)
 	if err != nil {
-		return err
+		s := "Internal error: Fail to encode response."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusInternalServerError)
+		return
 	}
 	// Sign message
-	if response.Sign(g.GatewayPrivateKey, g.GatewayPrivateKeyVersion) != nil {
-		return errors.New("Error in signing message")
+	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
+		s := "Internal error."
+		logging.Error(s + err.Error())
+		rest.Error(w, s, http.StatusInternalServerError)
+		return
 	}
-	// Send message
-	return fcrtcpcomms.SendTCPMessage(conn, response, settings.TCPInactivityTimeout)
+	w.WriteJson(response)
 }

@@ -23,8 +23,8 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
-// handleProviderPublishDHTOfferRequest handles the provider publish dht offer request
-func handleProviderPublishDHTOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+// HandleProviderPublishDHTOfferRequest handles the provider publish dht offer request
+func HandleProviderPublishDHTOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

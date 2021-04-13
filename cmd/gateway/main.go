@@ -20,6 +20,8 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
@@ -49,27 +51,35 @@ func main() {
 	// Start register manager's routine
 	c.RegisterMgr.Start()
 
+	// Start REST Client API Server
 	err := clientapi.StartClientRestAPI(appSettings)
 	if err != nil {
 		logging.Error("Error starting client REST server: %s", err.Error())
 		return
 	}
 
-	err = adminapi.StartAdminAPI(appSettings)
+	// Start REST Admin API Server
+	err = adminapi.StartAdminRESTAPI(appSettings)
 	if err != nil {
 		logging.Error("Error starting admin REST server: %s", err.Error())
 		return
 	}
 
-	err = gatewayapi.StartGatewayAPI(appSettings)
+	// Create P2P Server
+	c.P2PServer = fcrp2pserver.NewFCRP2PServer(
+		[]string{appSettings.BindGatewayAPI, appSettings.BindProviderAPI},
+		c.RegisterMgr,
+		appSettings.TCPInactivityTimeout)
+	// Add handlers and requesters
+	c.P2PServer.
+		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.HandleGatewayDHTDiscoverRequest).
+		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishGroupOfferRequestType, providerapi.HandleProviderPublishGroupOfferRequest).
+		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishDHTOfferRequestType, providerapi.HandleProviderPublishDHTOfferRequest).
+		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.RequestGatewayDHTDiscover).
+		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer)
+	err = c.P2PServer.Start()
 	if err != nil {
-		logging.Error("Error starting gateway tcp server: %s", err.Error())
-		return
-	}
-
-	err = providerapi.StartProviderAPI(appSettings)
-	if err != nil {
-		logging.Error("Error starting provider tcp server: %s", err.Error())
+		logging.Error("Error starting P2P server: %s", err.Error())
 		return
 	}
 

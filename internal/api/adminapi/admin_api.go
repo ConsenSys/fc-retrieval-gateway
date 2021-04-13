@@ -25,8 +25,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// StartAdminAPI starts the TCP API as a separate go routine.
-func StartAdminAPI(settings settings.AppSettings) error {
+// StartAdminRESTAPI starts the TCP API as a separate go routine.
+func StartAdminRESTAPI(settings settings.AppSettings) error {
 	api := rest.NewApi()
 	api.Use(rest.DefaultDevStack...)
 	router, err := rest.MakeRouter(

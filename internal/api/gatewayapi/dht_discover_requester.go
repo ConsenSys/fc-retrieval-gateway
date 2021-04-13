@@ -26,19 +26,19 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
-// requestGatewayDHTDiscover is used to request a DHT CID Discover.
-func requestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) error {
+// RequestGatewayDHTDiscover is used to request a DHT CID Discover.
+func RequestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
 	if len(args) != 2 {
-		return errors.New("Wrong arguments")
+		return nil, errors.New("Wrong arguments")
 	}
 	cid, ok := args[0].(*cid.ContentID)
 	if !ok {
-		return errors.New("Wrong arguments")
+		return nil, errors.New("Wrong arguments")
 	}
 	gatewayID, ok := args[1].(*nodeid.NodeID)
 	if !ok {
-		return errors.New("Wrong arguments")
+		return nil, errors.New("Wrong arguments")
 	}
 
 	// Get the core structure
@@ -48,36 +48,36 @@ func requestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcr
 	// TODO, ADD nonce, TTL and payment information.
 	request, err := fcrmessages.EncodeGatewayDHTDiscoverRequest(c.GatewayID, cid, 1, time.Now().Add(10*time.Second).Unix(), "", "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Sign the request
 	if request.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		return errors.New("Internal error in signing the request")
+		return nil, errors.New("Internal error in signing the request")
 	}
 	// Send the request
 	err = writer.Write(request, c.Settings.TCPInactivityTimeout)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Get a response
 	response, err := reader.Read(c.Settings.TCPInactivityTimeout)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Verify the response
 	// Get the gateway's signing key
 	gatewayInfo := c.RegisterMgr.GetGateway(gatewayID)
 	if gatewayInfo == nil {
-		return errors.New("Gateway information not found")
+		return nil, errors.New("Gateway information not found")
 	}
 	pubKey, err := gatewayInfo.GetSigningKey()
 	if err != nil {
-		return errors.New("Fail to obatin the public key")
+		return nil, errors.New("Fail to obatin the public key")
 	}
 
 	if response.Verify(pubKey) != nil {
-		return errors.New("Fail to verify the response")
+		return nil, errors.New("Fail to verify the response")
 	}
-	return nil
+	return response, nil
 }

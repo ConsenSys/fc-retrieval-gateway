@@ -71,7 +71,7 @@ func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	contacted := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for _, id := range gatewayIDs {
-		res, err := c.GatewayServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestType, cid, id)
+		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestType, cid, id)
 		if err != nil {
 			unContactable = append(unContactable, *id)
 		} else {

@@ -25,8 +25,8 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
-// handleGatewayDHTDiscoverRequest handles the gateway dht discover request
-func handleGatewayDHTDiscoverRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+// HandleGatewayDHTDiscoverRequest handles the gateway dht discover request
+func HandleGatewayDHTDiscoverRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

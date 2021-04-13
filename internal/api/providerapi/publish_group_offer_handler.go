@@ -23,8 +23,8 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 )
 
-// handleProviderPublishGroupOfferRequest handles the provider publish group offer request
-func handleProviderPublishGroupOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+// HandleProviderPublishGroupOfferRequest handles the provider publish group offer request
+func HandleProviderPublishGroupOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

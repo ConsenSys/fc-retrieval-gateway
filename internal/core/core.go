@@ -54,11 +54,8 @@ type Core struct {
 	// RegisterMgr manages all register related activities
 	RegisterMgr *fcrregistermgr.FCRRegisterMgr
 
-	// GatewayServer handles all communication to/from gateways
-	GatewayServer *fcrp2pserver.FCRP2PServer
-
-	// ProviderServer handles all communication to/from providers
-	ProviderServer *fcrp2pserver.FCRP2PServer
+	// P2PServer handles all communication to/from gateways/providers
+	P2PServer *fcrp2pserver.FCRP2PServer
 
 	// Offers, it is threadsafe.
 	Offers *offers.Offers

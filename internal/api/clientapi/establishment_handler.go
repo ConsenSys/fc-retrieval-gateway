@@ -32,7 +32,7 @@ func handleClientEstablishmentRequest(w rest.ResponseWriter, request *fcrmessage
 
 	clientID, challenge, ttl, err := fcrmessages.DecodeClientEstablishmentRequest(request)
 	if err != nil {
-		s := "Client Establishment: Failed to decode payload."
+		s := "Fail to decode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -49,7 +49,7 @@ func handleClientEstablishmentRequest(w rest.ResponseWriter, request *fcrmessage
 	// Construct message
 	response, err := fcrmessages.EncodeClientEstablishmentResponse(c.GatewayID, challenge)
 	if err != nil {
-		s := "Client Establishment: Error encoding payload."
+		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -57,7 +57,7 @@ func handleClientEstablishmentRequest(w rest.ResponseWriter, request *fcrmessage
 
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		s := "Internal error."
+		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return

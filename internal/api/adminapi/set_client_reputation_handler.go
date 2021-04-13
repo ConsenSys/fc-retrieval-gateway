@@ -39,7 +39,7 @@ func handleGatewayAdminSetReputationRequest(w rest.ResponseWriter, request *fcrm
 
 	clientID, reputataion, err := fcrmessages.DecodeGatewayAdminSetReputationRequest(request)
 	if err != nil {
-		s := "Admin Set Reputation: Failed to decode payload."
+		s := "Fail to decode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -58,14 +58,14 @@ func handleGatewayAdminSetReputationRequest(w rest.ResponseWriter, request *fcrm
 	// Construct messaqe
 	response, err := fcrmessages.EncodeGatewayAdminSetReputationResponse(clientID, currentRep, exists)
 	if err != nil {
-		s := "Internal error: Fail to encode response."
+		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		s := "Internal error."
+		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return

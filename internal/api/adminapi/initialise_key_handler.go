@@ -31,7 +31,7 @@ func handleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 
 	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
 	if err != nil {
-		s := "Admin Accept Keys Challenge: Failed to decode payload."
+		s := "Fail to decode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -44,7 +44,7 @@ func handleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 	// Construct messaqe
 	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
 	if err != nil {
-		s := "Internal error: Fail to encode response."
+		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
@@ -52,7 +52,7 @@ func handleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		s := "Internal error."
+		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return

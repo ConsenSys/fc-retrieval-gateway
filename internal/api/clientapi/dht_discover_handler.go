@@ -33,7 +33,7 @@ func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 
 	cid, nonce, ttl, numDHT, _, _, _, err := fcrmessages.DecodeClientDHTDiscoverRequest(request)
 	if err != nil {
-		s := "Client DHT CID Discovery: Failed to decode payload."
+		s := "Fail to decode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -47,7 +47,7 @@ func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	// Get a list of gatewayIDs to contact
 	gateways, err := c.RegisterMgr.GetGatewaysNearCID(cid, int(numDHT))
 	if err != nil || len(gateways) != int(numDHT) {
-		s := "Gateway fails to obtain required amount of peers."
+		s := "Fail to obtain required amount of peers."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -56,7 +56,7 @@ func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	for _, gateway := range gateways {
 		id, err := nodeid.NewNodeIDFromHexString(gateway.NodeID)
 		if err != nil {
-			s := "Gateway fails to generate node id."
+			s := "Fail to generate node id."
 			logging.Error(s + err.Error())
 			rest.Error(w, s, http.StatusBadRequest)
 			return
@@ -81,16 +81,15 @@ func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 
 	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, unContactable, nonce)
 	if err != nil {
-		s := "Internal error: Fail to encode response."
+		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
 
-	// Sign the message
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		s := "Internal error."
+		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return

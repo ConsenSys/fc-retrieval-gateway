@@ -33,7 +33,7 @@ func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrm
 
 	pieceCID, nonce, ttl, _, _, err := fcrmessages.DecodeClientStandardDiscoverRequest(request)
 	if err != nil {
-		s := "Client Standard CID Discovery: Failed to decode payload."
+		s := "Fail to decode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -54,7 +54,7 @@ func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrm
 	for _, offer := range offers {
 		suboffer, err := offer.GenerateSubCIDOffer(pieceCID)
 		if err != nil {
-			s := "Internal error: Error generating suboffer."
+			s := "Internal error: Fail to generate suboffer."
 			logging.Error(s + err.Error())
 			rest.Error(w, s, http.StatusBadRequest)
 			return
@@ -66,7 +66,7 @@ func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrm
 	// Construct response
 	response, err := fcrmessages.EncodeClientStandardDiscoverResponse(pieceCID, nonce, exists, suboffers, fundedPaymentChannel)
 	if err != nil {
-		s := "Internal error: Error encoding payload."
+		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
@@ -74,7 +74,7 @@ func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrm
 
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		s := "Internal error."
+		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return

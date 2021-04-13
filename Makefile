@@ -4,6 +4,7 @@
 
 VERSION?=dev
 IMAGE?=consensys/fc-retrieval-gateway
+COV?=80
 
 release: clean build tag
 
@@ -25,6 +26,9 @@ useremote:
 utest:
 	go test ./...
 
+coverage:
+	bash ./scripts/coverage.sh $(COV)
+
 # remove previous images and containers
 clean:
 	docker rm -f ${IMAGE}:${VERSION} 2> /dev/null || true
@@ -37,7 +41,7 @@ cleanoldfiles:
 cleanoldfile:
 	docker rm -f fc-retrieval-gateway-builder 2> /dev/null || true
 
-.PHONY: release clean build push cleanoldfiles utest
+.PHONY: release clean build push cleanoldfiles utest coverage
 
 # User `make dev arg=--build` to rebuild
 dev:

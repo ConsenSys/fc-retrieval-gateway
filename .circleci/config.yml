@@ -58,13 +58,31 @@ jobs:
     steps:
       - checkout
       - run: make utest
+  
+  coverage:
+    environment:
+      CODE_COVERAGE: 15
+    docker:
+      - image: circleci/golang:1.15
+    working_directory: /go/src/github.com/ConsenSys/fc-retrieval-gateway/
+    steps:
+      - checkout
+      - run:
+          name: Check code coverage
+          command: |
+            make coverage COV=$CODE_COVERAGE
 
 workflows:
   version: 2
   test_and_release:
     jobs:
       - utest
-      - release
+      - coverage:
+          requires:
+            - utest
+      - release:
+          requires:
+            - coverage
       - publishDocker:
           filters:
             branches:
@@ -72,5 +90,4 @@ workflows:
           context:
             - dockerhub-quorumengineering-rw
           requires:
-            - utest
             - release

@@ -25,8 +25,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleGatewayAdminGetReputationRequest handles admin get reputation request
-func handleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleGatewayAdminGetReputationRequest handles admin get reputation request
+func HandleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 

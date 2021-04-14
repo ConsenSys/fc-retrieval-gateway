@@ -23,6 +23,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/adminapi"
@@ -51,17 +52,25 @@ func main() {
 	// Start register manager's routine
 	c.RegisterMgr.Start()
 
-	// Start REST Client API Server
-	err := clientapi.StartClientRestAPI(appSettings)
-	if err != nil {
-		logging.Error("Error starting client REST server: %s", err.Error())
-		return
-	}
+	// Create REST Server
+	c.RESTServer = fcrrestserver.NewFCRRESTServer(
+		[]string{appSettings.BindAdminAPI, appSettings.BindRestAPI})
 
-	// Start REST Admin API Server
-	err = adminapi.StartAdminRESTAPI(appSettings)
+	// Add handlers to the REST Server
+	c.RESTServer.
+		// client api
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientEstablishmentRequestType, clientapi.HandleClientEstablishmentRequest).
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverRequestType, clientapi.HandleClientDHTCIDDiscoverRequest).
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverRequestType, clientapi.HandleClientStandardCIDDiscoverRequest).
+		// admin api
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminInitialiseKeyRequestType, adminapi.HandleGatewayAdminInitialiseKeyRequest).
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminGetReputationRequestType, adminapi.HandleGatewayAdminGetReputationRequest).
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminSetReputationRequestType, adminapi.HandleGatewayAdminSetReputationRequest)
+
+	// Start REST Server
+	err := c.RESTServer.Start()
 	if err != nil {
-		logging.Error("Error starting admin REST server: %s", err.Error())
+		logging.Error("Error starting REST server: %s", err.Error())
 		return
 	}
 
@@ -70,13 +79,18 @@ func main() {
 		[]string{appSettings.BindGatewayAPI, appSettings.BindProviderAPI},
 		c.RegisterMgr,
 		appSettings.TCPInactivityTimeout)
-	// Add handlers and requesters
+
+	// Add handlers and requesters to the P2P Server
 	c.P2PServer.
+		// gateway api
 		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.HandleGatewayDHTDiscoverRequest).
-		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishGroupOfferRequestType, providerapi.HandleProviderPublishGroupOfferRequest).
-		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishDHTOfferRequestType, providerapi.HandleProviderPublishDHTOfferRequest).
 		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.RequestGatewayDHTDiscover).
-		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer)
+		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer).
+		// provider api
+		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishGroupOfferRequestType, providerapi.HandleProviderPublishGroupOfferRequest).
+		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishDHTOfferRequestType, providerapi.HandleProviderPublishDHTOfferRequest)
+
+	// Start P2P Server
 	err = c.P2PServer.Start()
 	if err != nil {
 		logging.Error("Error starting P2P server: %s", err.Error())

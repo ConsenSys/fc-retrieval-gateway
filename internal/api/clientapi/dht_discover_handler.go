@@ -26,8 +26,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleClientDHTCIDDiscoverRequest is used to handle client request for cid offer
-func handleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleClientDHTCIDDiscoverRequest is used to handle client request for cid offer
+func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 

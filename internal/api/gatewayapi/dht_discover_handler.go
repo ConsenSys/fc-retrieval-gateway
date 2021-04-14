@@ -60,7 +60,7 @@ func HandleGatewayDHTDiscoverRequest(reader *fcrp2pserver.FCRServerReader, write
 	}
 
 	// Respond to the request
-	offers, exists := c.Offers.GetOffers(pieceCID)
+	offers, exists := c.OffersMgr.GetOffers(pieceCID)
 
 	suboffers := make([]cidoffer.SubCIDOffer, 0)
 	fundedPaymentChannel := make([]bool, 0)

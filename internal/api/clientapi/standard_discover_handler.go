@@ -26,8 +26,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleClientStandardCIDDiscoverRequest is used to handle client request for cid offer
-func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleClientStandardCIDDiscoverRequest is used to handle client request for cid offer
+func HandleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 
@@ -46,7 +46,7 @@ func handleClientStandardCIDDiscoverRequest(w rest.ResponseWriter, request *fcrm
 	}
 
 	// Search for offesr.
-	offers, exists := c.Offers.GetOffers(pieceCID)
+	offers, exists := c.OffersMgr.GetOffers(pieceCID)
 
 	suboffers := make([]cidoffer.SubCIDOffer, 0)
 	fundedPaymentChannel := make([]bool, 0)

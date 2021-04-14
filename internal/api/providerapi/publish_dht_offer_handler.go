@@ -58,7 +58,7 @@ func HandleProviderPublishDHTOfferRequest(reader *fcrp2pserver.FCRServerReader, 
 			return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 		}
 
-		if c.Offers.Add(&offer) != nil {
+		if c.OffersMgr.AddDHTOffer(&offer) != nil {
 			logging.Error("Internal error in adding single cid offer.")
 			return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 		}

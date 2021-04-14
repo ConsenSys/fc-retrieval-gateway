@@ -24,8 +24,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleGatewayAdminInitialiseKeyRequest handles admin initilise key request
-func handleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleGatewayAdminInitialiseKeyRequest handles admin initilise key request
+func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

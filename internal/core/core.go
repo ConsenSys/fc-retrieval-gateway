@@ -20,11 +20,12 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmerkletree"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcroffermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/offers"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
@@ -57,8 +58,11 @@ type Core struct {
 	// P2PServer handles all communication to/from gateways/providers
 	P2PServer *fcrp2pserver.FCRP2PServer
 
-	// Offers, it is threadsafe.
-	Offers *offers.Offers
+	// RESTServer handles all communication to/from client/admin
+	RESTServer *fcrrestserver.FCRRESTServer
+
+	// Offer Manager
+	OffersMgr *fcroffermgr.FCROfferMgr
 
 	// RegistrationBlockHash is the hash of the block that registers this gateway
 	// RegistrationTransactionReceipt is the transaction receipt containing the registration event
@@ -91,7 +95,7 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 			GatewayID:                      nil,
 			GatewayPrivateKey:              nil,
 			GatewayPrivateKeyVersion:       nil,
-			Offers:                         offers.GetSingleInstance(),
+			OffersMgr:                      fcroffermgr.NewFCROfferMgr(),
 			RegistrationBlockHash:          "TODO",
 			RegistrationTransactionReceipt: "TODO",
 			RegistrationMerkleRoot:         "TODO",

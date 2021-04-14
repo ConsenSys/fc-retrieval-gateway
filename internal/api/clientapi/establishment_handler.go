@@ -25,8 +25,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// handleClientEstablishmentRequest is used to handle initial establishment http request from client
-func handleClientEstablishmentRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleClientEstablishmentRequest is used to handle initial establishment http request from client
+func HandleClientEstablishmentRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 

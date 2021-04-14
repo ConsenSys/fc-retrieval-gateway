@@ -53,22 +53,13 @@ func handleAdminEnrollGateway(conn net.Conn, request *fcrmessages.FCRMessage, se
 		NetworkInfoClient:   networkInfoClient,
 		NetworkInfoAdmin:    networkInfoAdmin,
 	}
-	ok := registerGateway(newGateway, gatewayCoreStructure)
-	if !ok {
-		return errors.New("can not register a gateway")
+	newGatewayRegistered := registerGateway(newGateway, gatewayCoreStructure)
+	if !newGatewayRegistered {
+		logging.Error("can not register a gateway")
 	}
 
 	// Construct a message
-	response, err := fcrmessages.EncodeGatewayAdminEnrollGatewayRequest(
-		nodeID,
-		address,
-		rootSigningKey,
-		signingKey,
-		regionCode,
-		networkInfoGateway,
-		networkInfoProvider,
-		networkInfoClient,
-		networkInfoAdmin)
+	response, err := fcrmessages.EncodeGatewayAdminEnrollGatewayResponse(newGatewayRegistered)
 	if err != nil {
 		return err
 	}

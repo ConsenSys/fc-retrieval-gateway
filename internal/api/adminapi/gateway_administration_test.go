@@ -5,6 +5,7 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-register/pkg/register"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/gateway"
 )
 
@@ -15,7 +16,7 @@ func TestRegisterGateway_GatewayAddedWhenDoesNotExist(t *testing.T) {
 		NodeID: expectedNodeID,
 	}
 	gatewayCoreStructure := gateway.Gateway{
-		RegisteredGatewaysMap: map[string]register.RegisteredNode{},
+		RegisteredGatewaysMap: map[string]fcrtcpcomms.RegisteredNode{},
 	}
 
 	// act

@@ -10,7 +10,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/offers"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
-	"github.com/ConsenSys/fc-retrieval-register/pkg/register"
 )
 
 const (
@@ -33,11 +32,11 @@ type Gateway struct {
 	GatewayPrivateKeyVersion *fcrcrypto.KeyVersion
 
 	// RegisteredGatewaysMap stores mapping from gateway id (big int in string repr) to its registration info
-	RegisteredGatewaysMap     map[string]register.RegisteredNode
+	RegisteredGatewaysMap     map[string]fcrtcpcomms.RegisteredNode
 	RegisteredGatewaysMapLock sync.RWMutex
 
 	// RegisteredProvidersMap stores mapping from provider id (big int in string repr) to its registration info
-	RegisteredProvidersMap     map[string]register.RegisteredNode
+	RegisteredProvidersMap     map[string]fcrtcpcomms.RegisteredNode
 	RegisteredProvidersMapLock sync.RWMutex
 
 	// GatewayCommPool manages connection for outgoing request to gateways
@@ -82,9 +81,9 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Gateway {
 		instance = &Gateway{
 			ProtocolVersion:                protocolVersion,
 			ProtocolSupported:              []int32{protocolVersion, protocolSupported},
-			RegisteredGatewaysMap:          make(map[string]register.RegisteredNode),
+			RegisteredGatewaysMap:          make(map[string]fcrtcpcomms.RegisteredNode),
 			RegisteredGatewaysMapLock:      sync.RWMutex{},
-			RegisteredProvidersMap:         make(map[string]register.RegisteredNode),
+			RegisteredProvidersMap:         make(map[string]fcrtcpcomms.RegisteredNode),
 			RegisteredProvidersMapLock:     sync.RWMutex{},
 			GatewayPrivateKey:              nil,
 			GatewayPrivateKeyVersion:       nil,

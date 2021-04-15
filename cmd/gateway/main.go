@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrtcpcomms"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/adminapi"
@@ -129,7 +130,7 @@ func updateRegisteredGateways(appSettings settings.AppSettings, g *gateway.Gatew
 			g.RegisteredGatewaysMapLock.RUnlock()
 			if update {
 				g.RegisteredGatewaysMapLock.Lock()
-				g.RegisteredGatewaysMap = make(map[string]register.RegisteredNode)
+				g.RegisteredGatewaysMap = make(map[string]fcrtcpcomms.RegisteredNode)
 				for _, gateway := range gateways {
 					// Skip itself
 					if gateway.NodeID == g.GatewayID.ToString() {
@@ -189,7 +190,7 @@ func updateRegisteredProviders(appSettings settings.AppSettings, g *gateway.Gate
 			g.RegisteredProvidersMapLock.RUnlock()
 			if update {
 				g.RegisteredProvidersMapLock.Lock()
-				g.RegisteredProvidersMap = make(map[string]register.RegisteredNode)
+				g.RegisteredProvidersMap = make(map[string]fcrtcpcomms.RegisteredNode)
 				for _, provider := range providers {
 					logging.Info("Add to registered providers map: nodeID=%+v", provider.NodeID)
 					g.RegisteredProvidersMap[strings.ToLower(provider.NodeID)] = &provider

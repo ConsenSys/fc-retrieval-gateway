@@ -65,7 +65,8 @@ func main() {
 		// admin api
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminInitialiseKeyRequestType, adminapi.HandleGatewayAdminInitialiseKeyRequest).
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminGetReputationRequestType, adminapi.HandleGatewayAdminGetReputationRequest).
-		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminSetReputationRequestType, adminapi.HandleGatewayAdminSetReputationRequest)
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminSetReputationRequestType, adminapi.HandleGatewayAdminSetReputationRequest).
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminForceRefreshRequestType, adminapi.HandleGatewayAdminForceRefreshRequest)
 
 	// Start REST Server
 	err := c.RESTServer.Start()

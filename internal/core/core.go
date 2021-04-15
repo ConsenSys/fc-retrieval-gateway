@@ -26,6 +26,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
@@ -64,6 +65,9 @@ type Core struct {
 	// Offer Manager
 	OffersMgr *fcroffermgr.FCROfferMgr
 
+	// Reputation Manager
+	ReputationMgr *reputation.Reputation
+
 	// RegistrationBlockHash is the hash of the block that registers this gateway
 	// RegistrationTransactionReceipt is the transaction receipt containing the registration event
 	// RegistrationMerkleRoot is the root of the merkle trie containing the transaction receipt
@@ -96,6 +100,7 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 			GatewayPrivateKey:              nil,
 			GatewayPrivateKeyVersion:       nil,
 			OffersMgr:                      fcroffermgr.NewFCROfferMgr(),
+			ReputationMgr:                  reputation.GetSingleInstance(),
 			RegistrationBlockHash:          "TODO",
 			RegistrationTransactionReceipt: "TODO",
 			RegistrationMerkleRoot:         "TODO",

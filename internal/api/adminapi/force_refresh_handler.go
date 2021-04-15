@@ -24,8 +24,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// HandleGatewayAdminGetReputationRequest handles admin get reputation request
-func HandleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleGatewayAdminForceRefreshRequest handles admin force refresh request
+func HandleGatewayAdminForceRefreshRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 
@@ -36,7 +36,7 @@ func HandleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrm
 		return
 	}
 
-	clientID, err := fcrmessages.DecodeGatewayAdminGetReputationRequest(request)
+	refresh, err := fcrmessages.DecodeGatewayAdminForceRefreshRequest(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -44,11 +44,14 @@ func HandleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrm
 		return
 	}
 
-	// Get reputation db
-	reputation, exists := c.ReputationMgr.GetClientReputation(clientID)
+	refreshed := false
+	if refresh {
+		c.RegisterMgr.Refresh()
+		refreshed = true
+	}
 
 	// Construct message
-	response, err := fcrmessages.EncodeGatewayAdminGetReputationResponse(clientID, reputation, exists)
+	response, err := fcrmessages.EncodeGatewayAdminForceRefreshResponse(refreshed)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())

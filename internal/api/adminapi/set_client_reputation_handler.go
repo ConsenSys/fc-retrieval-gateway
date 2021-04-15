@@ -21,7 +21,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
@@ -46,12 +45,11 @@ func HandleGatewayAdminSetReputationRequest(w rest.ResponseWriter, request *fcrm
 	}
 
 	// Get reputation db
-	rep := reputation.GetSingleInstance()
-	exists := rep.ClientExists(clientID)
+	exists := c.ReputationMgr.ClientExists(clientID)
 	var currentRep int64 = 0
 
 	if exists {
-		rep.SetClientReputation(clientID, reputataion)
+		c.ReputationMgr.SetClientReputation(clientID, reputataion)
 		currentRep = reputataion
 	}
 

@@ -96,7 +96,7 @@ func handleIncomingAdminConnection(conn net.Conn, g *gateway.Gateway, settings s
 					return
 				}
 				continue
-			} else if message.GetMessageType() == fcrmessages.ProviderAdminEnrollProviderRequestType {
+			} else if message.GetMessageType() == fcrmessages.GatewayAdminEnrollProviderRequestType {
 				err = handleAdminEnrollProvider(conn, message, settings)
 				if err != nil && !fcrtcpcomms.IsTimeoutError(err) {
 					// Error in tcp communication, drop the connection.

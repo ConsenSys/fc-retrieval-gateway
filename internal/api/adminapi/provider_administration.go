@@ -53,21 +53,13 @@ func handleAdminEnrollProvider(conn net.Conn, request *fcrmessages.FCRMessage, s
 		NetworkInfoAdmin:   networkInfoAdmin,
 	}
 
-	ok := registerProvider(newProvider, gatewayCoreStructure)
-	if !ok {
-		return errors.New("can not register a provider")
+	newProviderRegistered := registerProvider(newProvider, gatewayCoreStructure)
+	if !newProviderRegistered {
+		logging.Error("can not register a provider")
 	}
 
 	// Construct a message
-	response, err := fcrmessages.EncodeGatewayAdminEnrollProviderRequest(
-		nodeID,
-		address,
-		rootSigningKey,
-		signingKey,
-		regionCode,
-		networkInfoGateway,
-		networkInfoClient,
-		networkInfoAdmin)
+	response, err := fcrmessages.EncodeGatewayAdminEnrollProviderResponse(newProviderRegistered)
 	if err != nil {
 		return err
 	}

@@ -60,7 +60,7 @@ func HandleProviderPublishGroupOfferRequest(reader *fcrp2pserver.FCRServerReader
 
 	// Store the offer
 	if c.OffersMgr.AddGroupOffer(offer) != nil {
-		logging.Error("Internal error in adding single cid offer.")
+		logging.Error("Internal error in adding group cid offer.")
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
 

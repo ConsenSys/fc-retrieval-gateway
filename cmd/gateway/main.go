@@ -18,8 +18,6 @@ package main
 import (
 	"time"
 
-	_ "github.com/joho/godotenv/autoload"
-
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
@@ -32,6 +30,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/providerapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 // Start Gateway service
@@ -47,7 +46,7 @@ func main() {
 	c := core.GetSingleInstance(&appSettings)
 
 	// Initialise a register manager
-	c.RegisterMgr = fcrregistermgr.NewFCRRegisterMgr(appSettings.RegisterAPIURL, true, true, 10*time.Second)
+	c.RegisterMgr = fcrregistermgr.NewFCRRegisterMgr(appSettings.RegisterAPIURL, true, true, 10*time.Second, appSettings.GatewayID)
 
 	// Start register manager's routine
 	c.RegisterMgr.Start()
@@ -66,7 +65,9 @@ func main() {
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminInitialiseKeyRequestType, adminapi.HandleGatewayAdminInitialiseKeyRequest).
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminGetReputationRequestType, adminapi.HandleGatewayAdminGetReputationRequest).
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminSetReputationRequestType, adminapi.HandleGatewayAdminSetReputationRequest).
-		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminForceRefreshRequestType, adminapi.HandleGatewayAdminForceRefreshRequest)
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminForceRefreshRequestType, adminapi.HandleGatewayAdminForceRefreshRequest).
+		// dht network gateway
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayPingRequestType, gatewayapi.HandleGatewayPingRequest)
 
 	// Start REST Server
 	err := c.RESTServer.Start()

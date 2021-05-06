@@ -22,6 +22,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
@@ -85,37 +86,54 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	if err != nil {
 		return nil, errors.New("Fail to obatin the public key")
 	}
-
 	if response.Verify(pubKey) != nil {
 		return nil, errors.New("Fail to verify the response")
 	}
 
 	// Sending acknowledgement
 	// Decode the response
-	cidOffers, err := fcrmessages.DecodeGatewayListDHTOfferResponse(response)
+	cidOfferMsgs, err := fcrmessages.DecodeGatewayListDHTOfferResponse(response)
 	if err != nil {
 		return nil, err
 	}
 	// Construct the message
-	cidOfferAcks := make([]fcrmessages.FCRMessage, 0)
-	for _, cidOffer := range cidOffers {
-		_, nonce, _, err := fcrmessages.DecodeProviderPublishDHTOfferRequest(&cidOffer)
-		if err != nil {
-			return nil, err
+	cidOfferMsgAcks := make([]fcrmessages.FCRMessage, 0)
+	for _, cidOfferMsg := range cidOfferMsgs {
+		// First verify the sub message
+		if cidOfferMsg.Verify(pubKey) != nil {
+			logging.Error("Fail to verify the sub message")
+			continue
 		}
-		// TODO: Need to store the received offers.
+		_, nonce, cidOffers, err := fcrmessages.DecodeProviderPublishDHTOfferRequest(&cidOfferMsg)
+		if err != nil {
+			logging.Error("Fail to decode message")
+			continue
+		}
+		// Verify the offers
+		for _, cidOffer := range cidOffers {
+			if cidOffer.Verify(pubKey) != nil {
+				logging.Error("Fail to verify the offer")
+				continue
+			}
+			// Store the offer
+			if c.OffersMgr.AddDHTOffer(&cidOffer) != nil {
+				logging.Error("Fail to store the offer")
+				continue
+			}
+		}
+
 		// Sign the offer message
-		sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, cidOffer)
+		sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, cidOfferMsg)
 		if err != nil {
 			return nil, err
 		}
-		cidOfferAck, err := fcrmessages.EncodeProviderPublishDHTOfferResponse(nonce, sig)
+		cidOfferMsgAck, err := fcrmessages.EncodeProviderPublishDHTOfferResponse(nonce, sig)
 		if err != nil {
 			return nil, err
 		}
-		cidOfferAcks = append(cidOfferAcks, *cidOfferAck)
+		cidOfferMsgAcks = append(cidOfferMsgAcks, *cidOfferMsgAck)
 	}
-	ack, err := fcrmessages.EncodeGatewayListDHTOfferAck(cidOfferAcks)
+	ack, err := fcrmessages.EncodeGatewayListDHTOfferAck(cidOfferMsgAcks)
 	if err != nil {
 		return nil, err
 	}

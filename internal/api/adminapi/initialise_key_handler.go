@@ -18,8 +18,10 @@ package adminapi
 import (
 	"net/http"
 
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ant0ine/go-json-rest/rest"
 )
@@ -59,4 +61,42 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 	}
 	// Send message
 	w.WriteJson(response)
+
+	// Send list cid offers
+	go func() {
+		// Get cid mean
+		cidM, err := cid.NewContentIDFromHexString(nodeID.ToString())
+		if err != nil {
+			logging.Error("Error generating cid mean")
+			return
+		}
+		gws, err := c.RegisterMgr.GetGatewaysNearCID(cidM, 16) //TODO: Do we use 16 here?
+		if err != nil {
+			logging.Error("Error getting gateways near cid")
+			return
+		}
+		if len(gws) < 2 {
+			logging.Error("Not enough gateways")
+			return
+		}
+		cidMin, err := cid.NewContentIDFromHexString(gws[0].NodeID)
+		if err != nil {
+			logging.Error("Error generating cid min")
+			return
+		}
+		cidMax, err := cid.NewContentIDFromHexString(gws[len(gws)-1].NodeID)
+		if err != nil {
+			logging.Error("Error generating cid max")
+			return
+		}
+		pvds := c.RegisterMgr.GetAllProviders()
+		for _, pvd := range pvds {
+			id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
+			if err != nil {
+				logging.Error("Error in generating node id")
+				continue
+			}
+			go c.P2PServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
+		}
+	}()
 }

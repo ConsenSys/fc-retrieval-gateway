@@ -29,6 +29,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/gatewayapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/providerapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/dht"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -44,9 +45,8 @@ func main() {
 
 	// Initialise a dummy gateway instance.
 	c := core.GetSingleInstance(&appSettings)
-
 	// Initialise a register manager
-	c.RegisterMgr = fcrregistermgr.NewFCRRegisterMgr(appSettings.RegisterAPIURL, true, true, 10*time.Second, appSettings.GatewayID)
+	c.RegisterMgr = fcrregistermgr.NewFCRRegisterMgr(appSettings.RegisterAPIURL, true, true, 10*time.Second)
 
 	// Start register manager's routine
 	c.RegisterMgr.Start()
@@ -65,9 +65,7 @@ func main() {
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminInitialiseKeyRequestType, adminapi.HandleGatewayAdminInitialiseKeyRequest).
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminGetReputationRequestType, adminapi.HandleGatewayAdminGetReputationRequest).
 		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminSetReputationRequestType, adminapi.HandleGatewayAdminSetReputationRequest).
-		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminForceRefreshRequestType, adminapi.HandleGatewayAdminForceRefreshRequest).
-		// dht network gateway
-		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayPingRequestType, gatewayapi.HandleGatewayPingRequest)
+		AddHandler(appSettings.BindAdminAPI, fcrmessages.GatewayAdminForceRefreshRequestType, adminapi.HandleGatewayAdminForceRefreshRequest)
 
 	// Start REST Server
 	err := c.RESTServer.Start()
@@ -88,6 +86,8 @@ func main() {
 		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.HandleGatewayDHTDiscoverRequest).
 		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.RequestGatewayDHTDiscover).
 		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer).
+		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayPingRequestType, gatewayapi.HandleGatewayPingRequest).
+		AddRequester(fcrmessages.GatewayPingRequestType, gatewayapi.RequestGatewayPing).
 		// provider api
 		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishGroupOfferRequestType, providerapi.HandleProviderPublishGroupOfferRequest).
 		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishDHTOfferRequestType, providerapi.HandleProviderPublishDHTOfferRequest)
@@ -105,7 +105,12 @@ func main() {
 	logging.Info("Filecoin Gateway Start-up Complete")
 
 	// Wait forever.
-	select {}
+	for {
+		select {
+		case <-c.RegisterMgr.GatewayRefreshCh():
+			dht.UpdateNearestGatewaysDHT()
+		}
+	}
 }
 
 // gracefulExit handles exit

@@ -14,10 +14,11 @@ func UpdateNearestGatewaysDHT() {
 	// gateway instance.
 	c := core.GetSingleInstance()
 
-	logging.Info("-------------------------------------------------------------")
+	logging.Info("---------------------- UpdateNearestGatewaysDHT Start----------------------")
+	defer logging.Info("---------------------- UpdateNearestGatewaysDHT End ----------------------")
 
 	allGateways := c.RegisterMgr.GetAllGateways()
-	if len(allGateways) == 0 || c.Settings.GatewayID == "" {
+	if len(allGateways) == 0 || c.GatewayID == nil {
 		return
 	}
 
@@ -25,37 +26,42 @@ func UpdateNearestGatewaysDHT() {
 	contacted := make([]fcrmessages.FCRMessage, 0)
 
 	for _, gtw := range allGateways {
-		gtwID, err := nodeid.NewNodeIDFromHexString(gtw.GetNodeID())
-		if err != nil {
-			logging.Error("error getting nodeID %s", gtw.GetNodeID())
+		nodeID := gtw.NodeID
+		if c.GatewayID.ToString() == nodeID {
 			continue
 		}
 
-		res, err := c.P2PServer.RequestGatewayFromGateway(gtwID, fcrmessages.GatewayPingRequestType)
+		gtwID, err := nodeid.NewNodeIDFromHexString(nodeID)
 		if err != nil {
-			logging.Error("gatewayID not available %s", gtw.GetNodeID())
+			logging.Error("error getting nodeID %s", nodeID)
 			continue
 		}
 
-		logging.Info("---------------", gtwIDs, contacted, res)
+		res, err := c.P2PServer.RequestGatewayFromGateway(gtwID, fcrmessages.GatewayPingRequestType, gtwID)
+		if err != nil {
+			logging.Error("gatewayID not available error: %s, %s", err, nodeID)
+			continue
+		}
+		logging.Debug("gatewayID available ! %s", nodeID)
 
 		contacted = append(contacted, *res)
-		// res.
+
 		fmt.Printf("%v\n", contacted)
 
 		gtwIDs = append(gtwIDs, gtwID)
 	}
 
-	closestGtwIDs, err := dhtring.SortClosestNodesIDs(c.Settings.GatewayID, gtwIDs)
+	closestGtwIDs, err := dhtring.SortClosestNodesIDs(c.GatewayID.ToBytes(), gtwIDs)
 	if err != nil {
 		logging.Error("Cant found closest allGateways.")
 	}
 
-	closestGatewaysIDs := make([]string, 0)
+	closestGatewaysIDs := make([][]byte, 0)
 	for _, gtw := range closestGtwIDs {
-		closestGatewaysIDs = append(closestGatewaysIDs, gtw.ToString())
+		closestGatewaysIDs = append(closestGatewaysIDs, gtw.ToBytes())
 	}
 
-	c.RegisterMgr.SetClosestGatewaysIDs(closestGatewaysIDs)
+	logging.Debug("c.RegisterMgr.SetClosestGatewaysIDs ", closestGatewaysIDs)
 
+	c.RegisterMgr.SetClosestGatewaysIDs(closestGatewaysIDs)
 }

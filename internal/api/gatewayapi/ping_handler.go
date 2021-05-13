@@ -25,7 +25,9 @@ import (
 )
 
 // HandleGatewayPingRequest handles admin force refresh request
-func HandleGatewayPingRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+func HandleGatewayPingRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+	logging.Debug("HandleGatewayPingRequest start ")
+	defer logging.Debug("HandleGatewayPingRequest end ")
 	// Get core structure
 	c := core.GetSingleInstance()
 
@@ -51,8 +53,8 @@ func HandleGatewayPingRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	}
 
 	// First verify the message
-	if request.Verify(pubKey) != nil {
-		logging.Warn("Fail to verify the request from %s", gatewayID.ToString())
+	if err := request.Verify(pubKey); err != nil {
+		logging.Error("Fail to verify the request from %s, error: %v", gatewayID.ToString(), err)
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
 
@@ -62,24 +64,27 @@ func HandleGatewayPingRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	}
 
 	// Respond to the request
-
 	// if receives the request then is alive
 	isAlive := true
-
+	logging.Debug("EncodeGatewayPingResponse starting ")
 	// Construct response
 	response, err := fcrmessages.EncodeGatewayPingResponse(nonce, isAlive)
 	if err != nil {
-		logging.Error("Internal error in encoding message.")
+		logging.Debug("EncodeGatewayPingResponse error ")
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
+	logging.Debug("EncodeGatewayPingResponse end ")
 
+	logging.Debug("Sign %v -- %v ", c.GatewayPrivateKey, c.GatewayPrivateKeyVersion)
 	// Sign response
 	err = response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion)
 	if err != nil {
-		logging.Error("Internal error in signing message.")
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
+
 	}
 
 	// send response
-	return writer.Write(response, c.Settings.TCPInactivityTimeout)
+	err = writer.Write(response, c.Settings.TCPInactivityTimeout)
+
+	return err
 }

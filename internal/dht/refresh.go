@@ -61,7 +61,7 @@ func UpdateNearestGatewaysDHT() {
 		closestGatewaysIDs = append(closestGatewaysIDs, gtw.ToBytes())
 	}
 
-	logging.Debug("c.RegisterMgr.SetClosestGatewaysIDs ", closestGatewaysIDs)
+	logging.Debug("c.RegisterMgr.SetClosestGatewaysIDs %v", closestGatewaysIDs)
 
 	c.RegisterMgr.SetClosestGatewaysIDs(closestGatewaysIDs)
 }

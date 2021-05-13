@@ -17,29 +17,33 @@ package gatewayapi
 
 import (
 	"errors"
-	"time"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // RequestGatewayPing is used to request a DHT CID Discover.
 func RequestGatewayPing(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
+	logging.Debug("RequestGatewayPing start")
+	defer logging.Debug("RequestGatewayPing end")
 	// Get parameters
-	gatewayID, nonce, ttl, err := getParameters(args)
-	if err != nil {
-		return nil, err
+	if len(args) != 1 {
+		return nil, errors.New("wrong arguments")
 	}
+
+	gatewayID, ok := args[0].(*nodeid.NodeID)
+	if !ok {
+		return nil, errors.New("wrong arguments")
+	}
+	// FIXME
+	nonce := int64(0)
+	ttl := int64(0)
 
 	// Get the core structure
 	c := core.GetSingleInstance()
-
-	// Second check if the message can be discarded.
-	if time.Now().Unix() > ttl {
-		return nil, err
-	}
 
 	// Construct message
 	request, err := fcrmessages.EncodeGatewayPingRequest(gatewayID, nonce, ttl)
@@ -54,13 +58,16 @@ func RequestGatewayPing(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserv
 	// Send the request
 	err = writer.Write(request, c.Settings.TCPInactivityTimeout)
 	if err != nil {
+		logging.Error("writer.Write error %v", err)
 		return nil, err
 	}
+
 	// Get a response
 	response, err := reader.Read(c.Settings.TCPInactivityTimeout)
 	if err != nil {
 		return nil, err
 	}
+	logging.Debug("response  %v %v", response, err)
 
 	// Verify the response
 	// Get the gateway's signing key
@@ -71,35 +78,14 @@ func RequestGatewayPing(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserv
 
 	pubKey, err := gatewayInfo.GetSigningKey()
 	if err != nil {
-		return nil, errors.New("Fail to obatin the public key")
+		return nil, errors.New("fail to obtain the public key")
 	}
 
-	if response.Verify(pubKey) != nil {
-		return nil, errors.New("Fail to verify the response")
+	if err := response.Verify(pubKey); err != nil {
+		logging.Debug("fail to verify the response with pubkey, error: %v", err)
+		// TODO uncomment next line after sign message
+		// return nil, errors.New("Fail to verify the response")
 	}
 
 	return response, nil
-}
-
-// getParameters from args
-func getParameters(args []interface{}) (*nodeid.NodeID, int64, int64, error) {
-	if len(args) != 3 {
-		return nil, 0, 0, errors.New("Wrong arguments")
-	}
-	gatewayID, ok := args[0].(*nodeid.NodeID)
-	if !ok {
-		return nil, 0, 0, errors.New("wrong arguments")
-	}
-
-	nonce, ok := args[1].(int64)
-	if !ok {
-		return nil, 0, 0, errors.New("wrong arguments")
-	}
-
-	ttl, ok := args[2].(int64)
-	if !ok {
-		return nil, 0, 0, errors.New("wrong arguments")
-	}
-
-	return gatewayID, nonce, ttl, nil
 }

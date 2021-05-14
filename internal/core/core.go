@@ -76,6 +76,9 @@ type Core struct {
 	RegistrationTransactionReceipt string
 	RegistrationMerkleRoot         string
 	RegistrationMerkleProof        *fcrmerkletree.FCRMerkleProof
+
+	// GroupCIDOfferSupported indicates if the gateway support group CID offers
+	GroupCIDOfferSupported bool
 }
 
 // Single instance of the gateway

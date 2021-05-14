@@ -30,7 +30,7 @@ import (
 // RequestListCIDOffer is used at start-up to request a list of DHT Offers from a provider with a given provider id.
 func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
-	if len(args) != 3 {
+	if len(args) != 4 {
 		return nil, errors.New("Wrong arguments")
 	}
 	cidMin, ok := args[0].(*cid.ContentID)
@@ -45,6 +45,10 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	if !ok {
 		return nil, errors.New("Wrong arguments")
 	}
+	publishGroupCIDOffer, ok := args[3].(bool)
+	if !ok {
+		return nil, errors.New("Wrong arguments, publishGroupCIDOffer")
+	}
 
 	// Get the core structure
 	c := core.GetSingleInstance()
@@ -57,6 +61,7 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 		c.RegistrationTransactionReceipt,
 		c.RegistrationMerkleRoot,
 		c.RegistrationMerkleProof,
+		publishGroupCIDOffer,
 	)
 	if err != nil {
 		return nil, err

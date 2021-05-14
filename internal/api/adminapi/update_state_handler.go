@@ -19,20 +19,23 @@ import (
 	"net/http"
 
 	"github.com/ant0ine/go-json-rest/rest"
+	"golang.org/x/tools/container/intsets"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/cid"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/register"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
-// HandleGatewayAdminInitialiseKeyRequest handles admin initilise key request
-func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
-	// Get the core structure
-	c := core.GetSingleInstance()
+// TODO: deprecated
+// igor CALL fc-retrieval-gateway ->  gatewayapi -> func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error)
 
-	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
+// GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
+func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+	c := core.GetSingleInstance()
+	nodeID, supportsGroupCIDOffer, err := fcrmessages.DecodeUpdateGatewayGroupCIDOfferSupportRequest(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -41,8 +44,7 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 	}
 
 	c.GatewayID = nodeID
-	c.GatewayPrivateKey = privKey
-	c.GatewayPrivateKeyVersion = privKeyVer
+	c.GroupCIDOfferSupported = supportsGroupCIDOffer
 
 	// Construct message
 	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
@@ -63,41 +65,18 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 	// Send message
 	w.WriteJson(response)
 
-	// Send list cid offers
-	go func() {
-		// Get cid mean
-		cidM, err := cid.NewContentIDFromHexString(nodeID.ToString())
+	go notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer)
+}
+
+func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer) {
+	//TODO: figure out cidMin, cidMax
+	cidMin, cidMax := intsets.MinInt, intsets.MaxInt
+	for _, pvd := range providers {
+		id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
 		if err != nil {
-			logging.Error("Error generating cid mean")
-			return
+			logging.Error("Error in generating node id")
+			continue
 		}
-		gws, err := c.RegisterMgr.GetGatewaysNearCID(cidM, 16) //TODO: Do we use 16 here?
-		if err != nil {
-			logging.Error("Error getting gateways near cid")
-			return
-		}
-		if len(gws) < 2 {
-			logging.Error("Not enough gateways")
-			return
-		}
-		cidMin, err := cid.NewContentIDFromHexString(gws[0].NodeID)
-		if err != nil {
-			logging.Error("Error generating cid min")
-			return
-		}
-		cidMax, err := cid.NewContentIDFromHexString(gws[len(gws)-1].NodeID)
-		if err != nil {
-			logging.Error("Error generating cid max")
-			return
-		}
-		pvds := c.RegisterMgr.GetAllProviders()
-		for _, pvd := range pvds {
-			id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
-			if err != nil {
-				logging.Error("Error in generating node id")
-				continue
-			}
-			go c.P2PServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
-		}
-	}()
+		go p2pServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
+	}
 }

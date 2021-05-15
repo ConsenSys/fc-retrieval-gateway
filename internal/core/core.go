@@ -77,8 +77,8 @@ type Core struct {
 	RegistrationMerkleRoot         string
 	RegistrationMerkleProof        *fcrmerkletree.FCRMerkleProof
 
-	// GroupCIDOfferSupported indicates if the gateway support group CID offers
-	GroupCIDOfferSupported bool
+	// GroupCIDOfferSupported indicates from which Providers the Gateway supports group CID offers
+	GroupCIDOfferSupportedForProviders []nodeid.NodeID
 }
 
 // Single instance of the gateway

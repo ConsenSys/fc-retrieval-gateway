@@ -45,10 +45,6 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	if !ok {
 		return nil, errors.New("Wrong arguments")
 	}
-	publishGroupCIDOffer, ok := args[3].(bool)
-	if !ok {
-		return nil, errors.New("Wrong arguments, publishGroupCIDOffer")
-	}
 
 	// Get the core structure
 	c := core.GetSingleInstance()
@@ -61,7 +57,6 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 		c.RegistrationTransactionReceipt,
 		c.RegistrationMerkleRoot,
 		c.RegistrationMerkleProof,
-		publishGroupCIDOffer,
 	)
 	if err != nil {
 		return nil, err

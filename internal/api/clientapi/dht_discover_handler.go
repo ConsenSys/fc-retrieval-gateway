@@ -19,11 +19,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ant0ine/go-json-rest/rest"
+
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
 )
 
 // HandleClientDHTCIDDiscoverRequest is used to handle client request for cid offer
@@ -45,7 +46,10 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		return
 	}
 	// Get a list of gatewayIDs to contact
-	gateways, err := c.RegisterMgr.GetGatewaysNearCID(cid, int(numDHT))
+
+	//TODO: merge - remove nil; need (*cid.ContentID, int, []*nodeid.NodeID)
+	gateways, err := c.RegisterMgr.GetGatewaysNearCID(cid, int(numDHT), nil)
+
 	if err != nil || len(gateways) != int(numDHT) {
 		s := "Fail to obtain required amount of peers."
 		logging.Error(s + err.Error())

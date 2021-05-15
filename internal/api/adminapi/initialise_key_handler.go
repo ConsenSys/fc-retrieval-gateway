@@ -71,7 +71,10 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 			logging.Error("Error generating cid mean")
 			return
 		}
-		gws, err := c.RegisterMgr.GetGatewaysNearCID(cidM, 16) //TODO: Do we use 16 here?
+
+		//TODO: merge - remove nil
+		gws, err := c.RegisterMgr.GetGatewaysNearCID(cidM, 16, nil) //TODO: Do we use 16 here?
+
 		if err != nil {
 			logging.Error("Error getting gateways near cid")
 			return

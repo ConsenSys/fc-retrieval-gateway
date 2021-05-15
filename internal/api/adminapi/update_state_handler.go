@@ -35,7 +35,7 @@ import (
 // GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
 func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	c := core.GetSingleInstance()
-	nodeID, supportsGroupCIDOffer, err := fcrmessages.DecodeUpdateGatewayGroupCIDOfferSupportRequest(request)
+	gateway, providers, err := fcrmessages.DecodeUpdateGatewayGroupCIDOfferSupportRequest(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -43,8 +43,8 @@ func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter,
 		return
 	}
 
-	c.GatewayID = nodeID
-	c.GroupCIDOfferSupported = supportsGroupCIDOffer
+	c.GatewayID = gateway
+	c.GroupCIDOfferSupportedForProviders = providers
 
 	// Construct message
 	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)

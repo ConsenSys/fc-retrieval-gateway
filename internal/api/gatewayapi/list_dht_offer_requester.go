@@ -30,7 +30,7 @@ import (
 // RequestListCIDOffer is used at start-up to request a list of DHT Offers from a provider with a given provider id.
 func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
-	if len(args) != 4 {
+	if len(args) != 3 {
 		return nil, errors.New("Wrong arguments")
 	}
 	cidMin, ok := args[0].(*cid.ContentID)

@@ -19,7 +19,6 @@ import (
 	"net/http"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"golang.org/x/tools/container/intsets"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
@@ -29,13 +28,10 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
-// TODO: deprecated
-// igor CALL fc-retrieval-gateway ->  gatewayapi -> func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error)
-
-// GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
-func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
+func HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	c := core.GetSingleInstance()
-	gateway, providers, err := fcrmessages.DecodeUpdateGatewayGroupCIDOfferSupportRequest(request)
+	_, providerIDs, err := fcrmessages.DecodeUpdateGatewayGroupCIDOfferSupportRequest(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -43,8 +39,7 @@ func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter,
 		return
 	}
 
-	c.GatewayID = gateway
-	c.GroupCIDOfferSupportedForProviders = providers
+	c.GroupCIDOfferSupportedForProviders = providerIDs
 
 	// Construct message
 	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
@@ -65,18 +60,17 @@ func GatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseWriter,
 	// Send message
 	w.WriteJson(response)
 
-	go notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer)
+	go notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer, c.GatewayID)
 }
 
-func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer) {
-	//TODO: figure out cidMin, cidMax
-	cidMin, cidMax := intsets.MinInt, intsets.MaxInt
+func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer, thisGatewayId *nodeid.NodeID) {
 	for _, pvd := range providers {
 		id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
 		if err != nil {
 			logging.Error("Error in generating node id")
 			continue
 		}
-		go p2pServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
+		thisGatewaySupportsGroupCIDOffer := true
+		go p2pServer.RequestProvider(id, fcrmessages.GatewayNotifyProviderGroupCIDOfferSupportedRequestType, thisGatewayId, thisGatewaySupportsGroupCIDOffer)
 	}
 }

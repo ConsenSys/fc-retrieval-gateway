@@ -68,18 +68,20 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	// TODO: Right now, it ignores the incremental result filed.
 	// Will return all in one message.
 	// Now requesting gateways.
-	contacted := make([]fcrmessages.FCRMessage, 0)
+	contacted := make([]nodeid.NodeID, 0)
+	contactedResp := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for _, id := range gatewayIDs {
 		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestType, cid, id)
 		if err != nil {
 			unContactable = append(unContactable, *id)
 		} else {
-			contacted = append(contacted, *res)
+			contacted = append(contacted, *id)
+			contactedResp = append(contactedResp, *res)
 		}
 	}
 
-	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, unContactable, nonce)
+	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, contactedResp, unContactable, nonce)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())

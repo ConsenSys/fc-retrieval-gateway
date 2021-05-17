@@ -20,16 +20,24 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
-// HandleGatewayAdminInitialiseKeyRequest handles admin initilise key request
-func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
-	// Get the core structure
+// HandleGatewayAdminListDHTOffersRequest handles admin list dht offer request
+func HandleGatewayAdminListDHTOffersRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+	// Get core structure
 	c := core.GetSingleInstance()
 
-	nodeID, privKey, privKeyVer, err := fcrmessages.DecodeGatewayAdminInitialiseKeyRequest(request)
+	if c.GatewayPrivateKey == nil {
+		s := "This gateway hasn't been initialised by the admin"
+		logging.Error(s)
+		rest.Error(w, s, http.StatusBadRequest)
+		return
+	}
+
+	refresh, err := fcrmessages.DecodeGatewayAdminListDHTOfferRequest(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -37,19 +45,36 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 		return
 	}
 
-	c.GatewayID = nodeID
-	c.GatewayPrivateKey = privKey
-	c.GatewayPrivateKeyVersion = privKeyVer
+	refreshed := false
+	if refresh {
+		// Send list cid offers
+		go func() {
+			cidMin, cidMax, err := c.RegisterMgr.GetGatewayCIDRange(c.GatewayID)
+			if err != nil {
+				logging.Error("Error getting cid range for gateway initial list dht offer: %v", err.Error())
+				return
+			}
+			pvds := c.RegisterMgr.GetAllProviders()
+			for _, pvd := range pvds {
+				id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
+				if err != nil {
+					logging.Error("Error in generating node id")
+					continue
+				}
+				go c.P2PServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
+			}
+		}()
+		refreshed = true
+	}
 
-	// Construct messaqe
-	response, err := fcrmessages.EncodeGatewayAdminInitialiseKeyResponse(true)
+	// Construct message
+	response, err := fcrmessages.EncodeGatewayAdminListDHTOfferResponse(refreshed)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-
 	// Sign message
 	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
 		s := "Internal error: Fail to sign message."
@@ -57,6 +82,5 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	// Send message
 	w.WriteJson(response)
 }

@@ -46,8 +46,8 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	}
 	// Get a list of gatewayIDs to contact
 	gateways, err := c.RegisterMgr.GetGatewaysNearCID(cid, int(numDHT), c.GatewayID)
-	if err != nil || len(gateways) != int(numDHT) {
-		s := "Fail to obtain required amount of peers."
+	if err != nil {
+		s := "Fail to obtain peers."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return

@@ -16,6 +16,7 @@ package core
  */
 
 import (
+	"encoding/json"
 	"sync"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
@@ -92,6 +93,23 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 			logging.ErrorAndPanic("More than one sets of settings supplied to Gateway start-up")
 		}
 
+		var mockProof fcrmerkletree.FCRMerkleProof
+		err := json.Unmarshal([]byte{
+			34, 65, 65, 65, 65, 77, 70, 115,
+			105, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 81, 85, 70, 66, 81, 85, 70,
+			66, 82, 84, 48, 105, 88, 81, 65,
+			65, 65, 65, 78, 98, 77, 86, 48,
+			61, 34}, &mockProof)
+		if err != nil {
+			panic(err)
+		}
+
 		instance = &Core{
 			ProtocolVersion:                protocolVersion,
 			ProtocolSupported:              []int32{protocolVersion, protocolSupported},
@@ -104,7 +122,7 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 			RegistrationBlockHash:          "TODO",
 			RegistrationTransactionReceipt: "TODO",
 			RegistrationMerkleRoot:         "TODO",
-			RegistrationMerkleProof:        nil, //TODO
+			RegistrationMerkleProof:        &mockProof, //TODO
 		}
 	})
 	return instance

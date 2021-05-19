@@ -25,6 +25,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/adminapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/clientapi"
@@ -89,6 +90,7 @@ func main() {
 		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.HandleGatewayDHTDiscoverRequest).
 		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.RequestGatewayDHTDiscover).
 		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer).
+		AddRequester(fcrmessages.GatewayNotifyProviderGroupCIDOfferSupportedRequestType, gatewayapi.NotifyProviderGroupCIDOfferSupported).
 		// provider api
 		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishGroupOfferRequestType, providerapi.HandleProviderPublishGroupOfferRequest).
 		AddHandler(appSettings.BindProviderAPI, fcrmessages.ProviderPublishDHTOfferRequestType, providerapi.HandleProviderPublishDHTOfferRequest)

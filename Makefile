@@ -10,18 +10,11 @@ release: clean build tag
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
+	cd scripts; bash use-remote-repos.sh
 	docker build -t ${IMAGE}:${VERSION} .
 
-build-local:
-	cat go.mod >> temp
-	echo "replace github.com/ConsenSys/fc-retrieval-common => ./local/fc-retrieval-common" >> go.mod
-	rm -rf ./local/
-	mkdir -p ./local/fc-retrieval-common/pkg
-	cp -r ../fc-retrieval-common/pkg/ ./local/fc-retrieval-common/pkg/
-	cp ../fc-retrieval-common/go.mod ./local/fc-retrieval-common/go.mod
-	docker build -t $(IMAGE):$(VERSION) .
-	rm -rf ./local/
-	mv temp go.mod
+buildlocal:
+	cd ..; docker build -f ./fc-retrieval-gateway/Dockerfile.local -t ${IMAGE}:${VERSION} .
 
 # push the image to an registry
 push:
@@ -32,7 +25,6 @@ tag:
 
 useremote:
 	cd scripts; bash use-remote-repos.sh
-
 
 utest:
 	go test ./...

@@ -9,7 +9,6 @@ COPY ./fc-retrieval-common ../fc-retrieval-common
 RUN go get -d -v github.com/ConsenSys/fc-retrieval-gateway/cmd/gateway
 # Do a full compile of app and dependancies, forcing static linking.
 RUN echo "replace github.com/ConsenSys/fc-retrieval-common => ../fc-retrieval-common" >> go.mod
-RUN cat go.mod
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o /go/bin/gateway ./cmd/gateway
 
 # Pull build gateway into a second stage deploy alpine container

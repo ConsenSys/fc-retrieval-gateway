@@ -10,7 +10,6 @@ release: clean build tag
 
 # builds a docker image that builds the app and packages it into a minimal docker image
 build:
-	cd scripts; bash use-remote-repos.sh
 	docker build -t ${IMAGE}:${VERSION} .
 
 buildlocal:

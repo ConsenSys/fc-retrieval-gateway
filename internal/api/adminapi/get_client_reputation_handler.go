@@ -56,7 +56,8 @@ func HandleGatewayAdminGetReputationRequest(w rest.ResponseWriter, request *fcrm
 		return
 	}
 	// Sign message
-	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
+	err = response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion)
+	if err != nil {
 		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)

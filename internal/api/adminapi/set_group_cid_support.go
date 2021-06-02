@@ -18,15 +18,13 @@ package adminapi
 import (
 	"net/http"
 
-	"github.com/ant0ine/go-json-rest/rest"
-
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/register"
-
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
 // HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
@@ -52,7 +50,8 @@ func HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseW
 	}
 
 	// Sign message
-	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
+	err = response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion)
+	if err != nil {
 		s := "Internal error: Fail to sign message."
 		logging.Error(s + err.Error())
 		rest.Error(w, s, http.StatusInternalServerError)

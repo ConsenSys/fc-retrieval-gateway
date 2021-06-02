@@ -60,6 +60,8 @@ func main() {
 		// client api
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientEstablishmentRequestType, clientapi.HandleClientEstablishmentRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverRequestType, clientapi.HandleClientDHTCIDDiscoverRequest).
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverRequestV2Type, clientapi.HandleClientDHTCIDDiscoverRequestV2).
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverOfferRequestType, clientapi.HandleClientStandardDiscoverOfferRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverRequestType, clientapi.HandleClientStandardCIDDiscoverRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverRequestV2Type, clientapi.HandleClientStandardCIDDiscoverRequestV2).
 		// admin api
@@ -88,6 +90,8 @@ func main() {
 	c.P2PServer.
 		// gateway api
 		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.HandleGatewayDHTDiscoverRequest).
+		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverRequestV2Type, gatewayapi.HandleGatewayDHTDiscoverRequestV2).
+		AddHandler(appSettings.BindGatewayAPI, fcrmessages.GatewayDHTDiscoverOfferResponseType, gatewayapi.HandleGatewayDHTOfferRequest).
 		AddRequester(fcrmessages.GatewayDHTDiscoverRequestType, gatewayapi.RequestGatewayDHTDiscover).
 		AddRequester(fcrmessages.GatewayDHTDiscoverRequestV2Type, gatewayapi.RequestGatewayDHTDiscoverV2).
 		AddRequester(fcrmessages.GatewayListDHTOfferRequestType, gatewayapi.RequestListCIDOffer).

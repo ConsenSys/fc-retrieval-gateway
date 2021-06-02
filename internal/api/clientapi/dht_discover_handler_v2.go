@@ -24,14 +24,15 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/filecoin-project/go-state-types/big"
 )
 
-// HandleClientDHTCIDDiscoverRequest is used to handle client request for cid offer
-func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
+// HandleClientDHTCIDDiscoverRequestV2 is used to handle client request for cid offer
+func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmessages.FCRMessage) {
 	// Get core structure
 	c := core.GetSingleInstance()
 
-	cid, nonce, ttl, numDHT, _, _, _, err := fcrmessages.DecodeClientDHTDiscoverRequest(request)
+	cid, nonce, ttl, numDHT, _, paymentChannelAddress, voucher, err := fcrmessages.DecodeClientDHTDiscoverRequestV2(request)
 	if err != nil {
 		s := "Fail to decode message."
 		logging.Error(s + err.Error())
@@ -52,6 +53,23 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
+
+	amount, err := c.PaymentMgr.Receive(paymentChannelAddress, voucher)
+	if err != nil {
+		s := "Internal error in payment manager Receive."
+		logging.Error(s)
+		rest.Error(w, s, http.StatusBadRequest)
+		return
+	}
+
+	searchPrice := c.Settings.SearchPrice
+	expectedAmount := searchPrice.Mul(searchPrice, new(big.Int).SetInt64(numDHT))
+	if amount.Cmp(expectedAmount) < 0 {
+		s := "Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String()
+		logging.Error(s)
+		rest.Error(w, s, http.StatusInternalServerError)
+	}
+
 	gatewayIDs := make([]*nodeid.NodeID, 0)
 	for _, gateway := range gateways {
 		id, err := nodeid.NewNodeIDFromHexString(gateway.NodeID)
@@ -72,7 +90,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	contactedResp := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for _, id := range gatewayIDs {
-		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestType, cid, id)
+		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestV2Type, cid, id)
 		if err != nil {
 			unContactable = append(unContactable, *id)
 		} else {
@@ -81,7 +99,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		}
 	}
 
-	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, contactedResp, unContactable, nonce)
+	response, err := fcrmessages.EncodeClientDHTDiscoverResponseV2(contacted, contactedResp, unContactable, nonce)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())

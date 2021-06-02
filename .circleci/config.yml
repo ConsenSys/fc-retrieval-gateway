@@ -61,7 +61,7 @@ jobs:
   
   coverage:
     environment:
-      CODE_COVERAGE: 5
+      CODE_COVERAGE: 4
     docker:
       - image: circleci/golang:1.15
     working_directory: /go/src/github.com/ConsenSys/fc-retrieval-gateway/

@@ -2,7 +2,9 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -43,6 +45,28 @@ func Map(conf *viper.Viper) settings.AppSettings {
 	if err != nil {
 		tcpLongInactivityTimeout = settings.DefaultLongTCPInactivityTimeout
 	}
+
+	defaultSearchPrice := new(big.Int)
+	_, err = fmt.Sscan(conf.GetString("SEARCH_PRICE"), defaultSearchPrice)
+	if err != nil {
+		// defaultSearchPrice is the default search price "0.001".
+		defaultSearchPrice = big.NewInt(1_000_000_000_000_000)
+	}
+
+	defaultOfferPrice := new(big.Int)
+	_, err = fmt.Sscan(conf.GetString("OFFER_PRICE"), defaultOfferPrice)
+	if err != nil {
+		// defaultOfferPrice is the default offer price "0.001".
+		defaultOfferPrice = big.NewInt(1_000_000_000_000_000)
+	}
+
+	defaultTopUpAmount := new(big.Int)
+	_, err = fmt.Sscan(conf.GetString("TOPUP_AMOUNT"), defaultTopUpAmount)
+	if err != nil {
+		// defaultTopUpAmount is the default top up amount "0.1".
+		defaultTopUpAmount = big.NewInt(100_000_000_000_000_000)
+	}
+
 	return settings.AppSettings{
 		BindRestAPI:     conf.GetString("BIND_REST_API"),
 		BindProviderAPI: conf.GetString("BIND_PROVIDER_API"),
@@ -74,9 +98,9 @@ func Map(conf *viper.Viper) settings.AppSettings {
 		TCPInactivityTimeout:     tcpInactivityTimeout,
 		TCPLongInactivityTimeout: tcpLongInactivityTimeout,
 
-		SearchPrice: conf.GetString("SEARCH_PRICE"),
-		OfferPrice:  conf.GetString("OFFER_PRICE"),
-		TopupAmount: conf.GetString("TOPUP_AMOUNT"),
+		SearchPrice: defaultSearchPrice,
+		OfferPrice:  defaultOfferPrice,
+		TopupAmount: defaultTopUpAmount,
 	}
 }
 

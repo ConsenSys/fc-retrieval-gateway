@@ -16,6 +16,7 @@ package settings
  */
 
 import (
+	"math/big"
 	"time"
 )
 
@@ -59,7 +60,7 @@ type AppSettings struct {
 	TCPInactivityTimeout     time.Duration `mapstructure:"TCP_INACTIVITY_TIMEOUT"`      // TCP inactivity timeout
 	TCPLongInactivityTimeout time.Duration `mapstructure:"TCP_LONG_INACTIVITY_TIMEOUT"` // TCP long inactivity timeout
 
-	SearchPrice string `mapstructure:SEARCH_PRICE`
-	OfferPrice  string `mapstructure:OFFER_PRICE`
-	TopupAmount string `mapstructure:TOPUP_AMOUNT`
+	SearchPrice *big.Int `mapstructure:SEARCH_PRICE`
+	OfferPrice  *big.Int `mapstructure:OFFER_PRICE`
+	TopupAmount *big.Int `mapstructure:TOPUP_AMOUNT`
 }

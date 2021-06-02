@@ -18,6 +18,8 @@ package main
 import (
 	"time"
 
+	_ "github.com/joho/godotenv/autoload"
+
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
@@ -30,7 +32,6 @@ import (
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/providerapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
-	_ "github.com/joho/godotenv/autoload"
 )
 
 // Start Gateway service
@@ -60,6 +61,7 @@ func main() {
 		// client api
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientEstablishmentRequestType, clientapi.HandleClientEstablishmentRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverRequestType, clientapi.HandleClientDHTCIDDiscoverRequest).
+		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverOfferRequestType, clientapi.HandleClientDHTDiscoverOfferRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientDHTDiscoverRequestV2Type, clientapi.HandleClientDHTCIDDiscoverRequestV2).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverOfferRequestType, clientapi.HandleClientStandardDiscoverOfferRequest).
 		AddHandler(appSettings.BindRestAPI, fcrmessages.ClientStandardDiscoverRequestType, clientapi.HandleClientStandardCIDDiscoverRequest).

@@ -22,32 +22,37 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // RequestGatewayDHTDiscoverOffer is used to request a DHT
 func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
-	if len(args) != 5 {
+	if len(args) != 6 {
 		return nil, errors.New("wrong arguments")
 	}
 	cid, ok := args[0].(*cid.ContentID)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
-	nonce, ok := args[1].(int64)
+	gatewayID, ok := args[1].(*nodeid.NodeID)
+	if !ok {
+		return nil, errors.New("Wrong arguments")
+	}
+	nonce, ok := args[2].(int64)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
-	offerDigests, ok := args[2].([][cidoffer.CIDOfferDigestSize]byte)
+	offerDigests, ok := args[3].([][cidoffer.CIDOfferDigestSize]byte)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
-	paychAddr, ok := args[3].(string)
+	paychAddr, ok := args[4].(string)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
-	voucher, ok := args[4].(string)
+	voucher, ok := args[5].(string)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
@@ -75,5 +80,19 @@ func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer
 		return nil, err
 	}
 
+	// Verify the response
+	// Get the gateway's signing key
+	gatewayInfo := c.RegisterMgr.GetGateway(gatewayID)
+	if gatewayInfo == nil {
+		return nil, errors.New("Gateway information not found")
+	}
+	pubKey, err := gatewayInfo.GetSigningKey()
+	if err != nil {
+		return nil, errors.New("Fail to obatin the public key")
+	}
+
+	if response.Verify(pubKey) != nil {
+		return nil, errors.New("Fail to verify the response")
+	}
 	return response, nil
 }

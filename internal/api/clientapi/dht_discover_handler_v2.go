@@ -62,24 +62,11 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 		return
 	}
 
-	searchPrice := c.Settings.SearchPrice
-	expectedAmount := searchPrice.Mul(searchPrice, new(big.Int).SetInt64(numDHT))
+	expectedAmount := new(big.Int).Mul(c.Settings.SearchPrice, new(big.Int).SetInt64(numDHT))
 	if amount.Cmp(expectedAmount) < 0 {
 		s := "Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String()
 		logging.Error(s)
 		rest.Error(w, s, http.StatusInternalServerError)
-	}
-
-	gatewayIDs := make([]*nodeid.NodeID, 0)
-	for _, gateway := range gateways {
-		id, err := nodeid.NewNodeIDFromHexString(gateway.NodeID)
-		if err != nil {
-			s := "Fail to generate node id."
-			logging.Error(s + err.Error())
-			rest.Error(w, s, http.StatusBadRequest)
-			return
-		}
-		gatewayIDs = append(gatewayIDs, id)
 	}
 
 	// Construct response
@@ -89,8 +76,38 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 	contacted := make([]nodeid.NodeID, 0)
 	contactedResp := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
-	for _, id := range gatewayIDs {
-		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestV2Type, cid, id)
+	for _, gw := range gateways {
+		id, err := nodeid.NewNodeIDFromHexString(gw.NodeID)
+		if err != nil {
+			s := "Fail to generate node id."
+			logging.Error(s + err.Error())
+			rest.Error(w, s, http.StatusBadRequest)
+			return
+		}
+		// Pay this gateway
+		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(gw.Address, 0, c.Settings.SearchPrice)
+		if err != nil {
+			s := "Fail to pay recipient."
+			logging.Error(s + err.Error())
+			rest.Error(w, s, http.StatusBadRequest)
+			return
+		}
+		if topup {
+			if err := c.PaymentMgr.Topup(gw.Address, c.Settings.TopupAmount); err != nil {
+				s := "Fail to top up."
+				logging.Error(s + err.Error())
+				rest.Error(w, s, http.StatusBadRequest)
+				return
+			}
+			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(gw.Address, 0, c.Settings.SearchPrice)
+			if topup || err != nil {
+				s := "Fail to pay recipient."
+				logging.Error(s + err.Error())
+				rest.Error(w, s, http.StatusBadRequest)
+				return
+			}
+		}
+		res, err := c.P2PServer.RequestGatewayFromGateway(id, fcrmessages.GatewayDHTDiscoverRequestV2Type, cid, id, paychAddr, voucher)
 		if err != nil {
 			unContactable = append(unContactable, *id)
 		} else {

@@ -16,6 +16,7 @@ package clientapi
  */
 
 import (
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -39,13 +40,57 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 		return
 	}
 
+	// Check amount
+	amount, err := c.PaymentMgr.Receive(paymentChannel, voucher)
+	if err != nil {
+		s := "Internal error in payment manager Receive."
+		logging.Error(s)
+		rest.Error(w, s, http.StatusBadRequest)
+		return
+	}
+	unit := 0
+	for _, entry := range allGatewaysOfferDigests {
+		unit += len(entry)
+	}
+	expectedAmt := new(big.Int).Mul(big.NewInt(int64(unit)), c.Settings.OfferPrice)
+	if amount.Cmp(expectedAmt) < 0 {
+		s := "Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmt.String()
+		logging.Error(s)
+		rest.Error(w, s, http.StatusInternalServerError)
+	}
+
 	contactedGateways := make([]nodeid.NodeID, 0)
 	contactedResp := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for idx, targetGatewayID := range targetGatewayIDs {
-		// using index from one collection to access another; create a struct?
 		thisGatewayOfferDigests := allGatewaysOfferDigests[idx]
-		res, err := c.P2PServer.RequestGatewayFromGateway(&targetGatewayID, fcrmessages.GatewayDHTDiscoverOfferRequestType, cid, nonce, thisGatewayOfferDigests, paymentChannel, voucher)
+		targetGateway := c.RegisterMgr.GetGateway(&targetGatewayID)
+		// Pay this gateway
+		toPay := new(big.Int).Mul(big.NewInt(int64(len(thisGatewayOfferDigests))), c.Settings.OfferPrice)
+		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(targetGateway.Address, 0, toPay)
+		if err != nil {
+			s := "Fail to pay recipient."
+			logging.Error(s + err.Error())
+			rest.Error(w, s, http.StatusBadRequest)
+			return
+		}
+		if topup {
+			if err := c.PaymentMgr.Topup(targetGateway.Address, c.Settings.TopupAmount); err != nil {
+				s := "Fail to top up."
+				logging.Error(s + err.Error())
+				rest.Error(w, s, http.StatusBadRequest)
+				return
+			}
+			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(targetGateway.Address, 0, c.Settings.SearchPrice)
+			if topup || err != nil {
+				s := "Fail to pay recipient."
+				logging.Error(s + err.Error())
+				rest.Error(w, s, http.StatusBadRequest)
+				return
+			}
+		}
+		// using index from one collection to access another; create a struct?
+		res, err := c.P2PServer.RequestGatewayFromGateway(&targetGatewayID, fcrmessages.GatewayDHTDiscoverOfferRequestType, cid, targetGatewayID, nonce, thisGatewayOfferDigests, paychAddr, voucher)
 		if err != nil {
 			unContactable = append(unContactable, targetGatewayID)
 		} else {

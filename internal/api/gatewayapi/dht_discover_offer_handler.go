@@ -28,16 +28,35 @@ import (
 func HandleGatewayDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
+
+	// TODO, Need to have an id
 	pieceCID, nonce, offerDigests, paymentChannelAddress, voucher, err := fcrmessages.DecodeGatewayDHTDiscoverOfferRequest(request)
 	if err != nil {
 		// Reply with invalid message
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
 
+	// // Get the gateway's signing key
+	// gatewayInfo := c.RegisterMgr.GetGateway(gatewayID)
+	// if gatewayInfo == nil {
+	// 	logging.Warn("Gateway information not found for %s.", gatewayID.ToString())
+	// 	return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
+	// }
+	// pubKey, err := gatewayInfo.GetSigningKey()
+	// if err != nil {
+	// 	logging.Warn("Fail to obtain the public key for %s", gatewayID.ToString())
+	// 	return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
+	// }
+
+	// // First verify the message
+	// if request.Verify(pubKey) != nil {
+	// 	logging.Warn("Fail to verify the request from %s", gatewayID.ToString())
+	// 	return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
+	// }
+
 	amount, err := c.PaymentMgr.Receive(paymentChannelAddress, voucher)
 	if err != nil {
 		logging.Error("Internal error in payment manager Receive.")
-
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
 

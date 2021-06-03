@@ -16,7 +16,6 @@ package gatewayapi
  */
 
 import (
-	"math/big"
 	"time"
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
@@ -66,16 +65,14 @@ func HandleGatewayDHTDiscoverRequestV2(_ *fcrp2pserver.FCRServerReader, writer *
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)
 	}
 
-	// Respond to the request
-	offers, exists := c.OffersMgr.GetOffers(pieceCID)
-
-	lenOffers := new(big.Int).SetInt64(int64(len(offers)))
-	expectedAmount := lenOffers.Mul(lenOffers, c.Settings.OfferPrice)
-	if amount.Cmp(expectedAmount) < 0 {
-		logging.Error("Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String())
+	if amount.Cmp(c.Settings.SearchPrice) < 0 {
+		logging.Error("Insufficient Funds, received " + amount.String() + ", expected: " + c.Settings.SearchPrice.String())
 		// TODO update paymentChannelID
 		return writer.WriteInsufficientFunds(c.Settings.TCPInactivityTimeout, 42)
 	}
+
+	// Respond to the request
+	offers, exists := c.OffersMgr.GetOffers(pieceCID)
 
 	subCIDOfferDigests := make([][cidoffer.CIDOfferDigestSize]byte, 0)
 	fundedPaymentChannel := make([]bool, 0)

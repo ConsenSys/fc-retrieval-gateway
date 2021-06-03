@@ -29,7 +29,7 @@ import (
 // RequestGatewayDHTDiscoverV2 is used to request a DHT CID Discover.
 func RequestGatewayDHTDiscoverV2(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
-	if len(args) != 2 {
+	if len(args) != 4 {
 		return nil, errors.New("Wrong arguments")
 	}
 	contentID, ok := args[0].(*cid.ContentID)

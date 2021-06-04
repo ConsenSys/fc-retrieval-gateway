@@ -45,6 +45,7 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 	if err != nil {
 		s := "Internal error in payment manager Receive."
 		logging.Error(s)
+		logging.Error(err.Error())
 		rest.Error(w, s, http.StatusBadRequest)
 		return
 	}
@@ -90,8 +91,9 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 			}
 		}
 		// using index from one collection to access another; create a struct?
-		res, err := c.P2PServer.RequestGatewayFromGateway(&targetGatewayID, fcrmessages.GatewayDHTDiscoverOfferRequestType, cid, targetGatewayID, nonce, thisGatewayOfferDigests, paychAddr, voucher)
+		res, err := c.P2PServer.RequestGatewayFromGateway(&targetGatewayID, fcrmessages.GatewayDHTDiscoverOfferRequestType, cid, &targetGatewayID, nonce, thisGatewayOfferDigests, paychAddr, voucher)
 		if err != nil {
+			logging.Info("Uncontactable: %v", err.Error())
 			unContactable = append(unContactable, targetGatewayID)
 		} else {
 			contactedGateways = append(contactedGateways, targetGatewayID)

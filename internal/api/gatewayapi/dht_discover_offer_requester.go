@@ -22,6 +22,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
@@ -77,6 +78,7 @@ func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer
 	// Get a response
 	response, err := reader.Read(c.Settings.TCPInactivityTimeout)
 	if err != nil {
+		logging.Info(err.Error())
 		return nil, err
 	}
 

@@ -19,12 +19,13 @@ import (
 	"net/http"
 	"time"
 
+	"math/big"
+
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/filecoin-project/go-state-types/big"
 )
 
 // HandleClientDHTCIDDiscoverRequestV2 is used to handle client request for cid offer
@@ -62,7 +63,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 		return
 	}
 
-	expectedAmount := new(big.Int).Mul(c.Settings.SearchPrice, new(big.Int).SetInt64(numDHT))
+	expectedAmount := new(big.Int).Mul(c.Settings.SearchPrice, big.NewInt(numDHT))
 	if amount.Cmp(expectedAmount) < 0 {
 		s := "Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String()
 		logging.Error(s)

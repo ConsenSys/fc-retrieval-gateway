@@ -1,3 +1,6 @@
+/*
+Package main - program entry point for a Gateway node.
+*/
 package main
 
 /*
@@ -25,6 +28,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/config"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/adminapi"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/api/clientapi"

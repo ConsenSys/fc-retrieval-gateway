@@ -1,3 +1,7 @@
+/*
+Package core - structure representing a Gateway's current state, including setting, configuration, references to
+all running Gateway APIs of this instance.
+*/
 package core
 
 /*
@@ -28,6 +32,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )

@@ -1,3 +1,7 @@
+/*
+Package reputation - contains operations related to blockchain network participants' favorability marking.
+Participant with higher reputation is generally more preferable.
+*/
 package reputation
 
 /*

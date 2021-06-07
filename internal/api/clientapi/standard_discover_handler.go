@@ -21,9 +21,10 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ant0ine/go-json-rest/rest"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
-	"github.com/ant0ine/go-json-rest/rest"
 )
 
 // HandleClientStandardCIDDiscoverRequest is used to handle client request for cid offer

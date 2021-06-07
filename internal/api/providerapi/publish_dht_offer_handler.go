@@ -1,3 +1,7 @@
+/*
+Package providerapi - set of remote API used to call a Gateway, grouped to a specific caller type - Retrieval Provider.
+All calls from FileCoin Secondary Retrieval network nodes of type Retrieval Provider are going to API handlers in this package.
+*/
 package providerapi
 
 /*
@@ -20,6 +24,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 

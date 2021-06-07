@@ -1,3 +1,7 @@
+/*
+Package gatewayapi - set of remote API used to call a Gateway, grouped to a specific caller type - Retrieval Gateway.
+All calls from FileCoin Secondary Retrieval network nodes of type Retrieval Gateway are going to API handlers in this package.
+*/
 package gatewayapi
 
 /*
@@ -22,6 +26,7 @@ import (
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 

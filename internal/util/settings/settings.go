@@ -1,3 +1,6 @@
+/*
+Package settings - holds configuration specific to a Retrieval Gateway node.
+*/
 package settings
 
 /*

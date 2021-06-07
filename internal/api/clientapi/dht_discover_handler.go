@@ -1,3 +1,7 @@
+/*
+Package clientapi - set of remote API used to call a Gateway, grouped to a specific caller type - Retrieval Client.
+All calls from FileCoin Secondary Retrieval network nodes of type Retrieval Client are going to API handlers in this package.
+*/
 package clientapi
 
 /*
@@ -19,11 +23,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ant0ine/go-json-rest/rest"
+
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
 )
 
 // HandleClientDHTCIDDiscoverRequest is used to handle client request for cid offer

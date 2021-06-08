@@ -1,8 +1,8 @@
-# fc-retrieval-gateway
+# Filecoin Retrieval Gateway
 
-Filecoin Retrieval Gateway
+A Filecoin node that brokers retrieval of user files, with one or more Retrieval Providers and Storage Miners.
 
-## Start the service
+## Start the service for development
 
 ### Create a config file
 
@@ -10,9 +10,7 @@ Create a `.env` file, using [.env.example](./.env.example) as a reference:
 
 ```
 cp .env.example .env
-=======
-
-## Development
+```
 
 ### Start the service with Docker
 
@@ -28,6 +26,8 @@ The APIs should be available at
 - Provider Api: `http://localhost:9011`
 - Gateway Api: `http://localhost:9012`
 - Admin Api: `http://localhost:9013`
+
+### Rebuild
 
 To rebuild containers, following option can be used:
 

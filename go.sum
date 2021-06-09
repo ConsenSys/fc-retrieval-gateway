@@ -30,12 +30,8 @@ github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOv
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210604035751-b4921d2f7d4e h1:UautHcLOZrnpwHEJxCiq11Z8ylh9UDYKeKAzB3Vg1Z0=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210604035751-b4921d2f7d4e/go.mod h1:U3GTM2nHsKP/nJCMLj4lAQImK8qYRLzvTpPt48PHHb8=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210604064015-6b14b8177eac h1:u1KnMiOwi540oGwAiY0rqAVxCF+ECvu3zG49bGogV5Y=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210604064015-6b14b8177eac/go.mod h1:U3GTM2nHsKP/nJCMLj4lAQImK8qYRLzvTpPt48PHHb8=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210609010735-9d4d29425703 h1:kmX41l67+TnlC6RXjZpcHdPwhPUb7ZPN1MEIjVM/uDY=
-github.com/ConsenSys/fc-retrieval-common v0.0.0-20210609010735-9d4d29425703/go.mod h1:U3GTM2nHsKP/nJCMLj4lAQImK8qYRLzvTpPt48PHHb8=
+github.com/ConsenSys/fc-retrieval-common v0.0.0-20210609034742-0abda690f72c h1:DKcRTcDtiynSV1TPo61vDsmlvo0xeufJ/6IHboov0JA=
+github.com/ConsenSys/fc-retrieval-common v0.0.0-20210609034742-0abda690f72c/go.mod h1:qUWQSHpnQDe3cpvJkmLjEjALmroPJPiRl1Chr4T7+1Q=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
 github.com/GeertJohan/go.incremental v1.0.0 h1:7AH+pY1XUgQE4Y1HcXYaMqAI0m9yrFqo/jt0CW30vsg=
 github.com/GeertJohan/go.incremental v1.0.0/go.mod h1:6fAjUhbVuX1KcMD3c8TEgVUqmo4seqhv0i0kdATSkM0=
@@ -272,8 +268,8 @@ github.com/filecoin-project/go-statestore v0.1.1-0.20210311122610-6c7a5aedbdea h
 github.com/filecoin-project/go-statestore v0.1.1-0.20210311122610-6c7a5aedbdea/go.mod h1:LFc9hD+fRxPqiHiaqUEZOinUJB4WARkRfNl10O7kTnI=
 github.com/filecoin-project/go-storedcounter v0.0.0-20200421200003-1c99c62e8a5b h1:fkRZSPrYpk42PV3/lIXiL0LHetxde7vyYYvSsttQtfg=
 github.com/filecoin-project/go-storedcounter v0.0.0-20200421200003-1c99c62e8a5b/go.mod h1:Q0GQOBtKf1oE10eSXSlhN45kDBdGvEcVOqMiffqX+N8=
-github.com/filecoin-project/lotus v1.6.0 h1:LIor8joaJzNXvAAy8Mm+3krXmrzJXCS60h/hI1NgZmA=
-github.com/filecoin-project/lotus v1.6.0/go.mod h1:jDVPgwRg/4Zw03VN5bIWR+cgEzzgbrKzGaRwxc2KGTA=
+github.com/filecoin-project/lotus v1.8.0 h1:X6dUvvOvDkuWjsAOmMIK/23AMfkM18T0R1CUaIEELTA=
+github.com/filecoin-project/lotus v1.8.0/go.mod h1:a4vfqKJ2ynqg5TXpcPer/orWZIKBwJAv5TsBUj1PrSQ=
 github.com/filecoin-project/specs-actors v0.6.1/go.mod h1:dRdy3cURykh2R8O/DKqy8olScl70rmIS7GrB4hB1IDY=
 github.com/filecoin-project/specs-actors v0.9.4/go.mod h1:BStZQzx5x7TmCkLv0Bpa07U6cPKol6fd3w9KjMPZ6Z4=
 github.com/filecoin-project/specs-actors v0.9.12/go.mod h1:TS1AW/7LbG+615j4NsjMK1qlpAwaFsG9w0V2tg2gSao=
@@ -285,6 +281,9 @@ github.com/filecoin-project/specs-actors/v2 v2.3.5-0.20210114162132-5b58b773f4fb
 github.com/filecoin-project/specs-actors/v2 v2.3.5-0.20210114162132-5b58b773f4fb/go.mod h1:LljnY2Mn2homxZsmokJZCpRuhOPxfXhvcek5gWkmqAc=
 github.com/filecoin-project/specs-actors/v3 v3.1.0 h1:s4qiPw8pgypqBGAy853u/zdZJ7K9cTZdM1rTiSonHrg=
 github.com/filecoin-project/specs-actors/v3 v3.1.0/go.mod h1:mpynccOLlIRy0QnR008BwYBwT9fen+sPR13MA1VmMww=
+github.com/filecoin-project/specs-actors/v4 v4.0.0/go.mod h1:TkHXf/l7Wyw4ZejyXIPS2rK8bBO0rdwhTZyQQgaglng=
+github.com/filecoin-project/specs-actors/v4 v4.0.1 h1:AiWrtvJZ63MHGe6rn7tPu4nSUY8bA1KDNszqJaD5+Fg=
+github.com/filecoin-project/specs-actors/v4 v4.0.1/go.mod h1:TkHXf/l7Wyw4ZejyXIPS2rK8bBO0rdwhTZyQQgaglng=
 github.com/filecoin-project/specs-storage v0.1.1-0.20201105051918-5188d9774506 h1:Ur/l2+6qN+lQiqjozWWc5p9UDaAMDZKTlDS98oRnlIw=
 github.com/filecoin-project/specs-storage v0.1.1-0.20201105051918-5188d9774506/go.mod h1:nJRRM7Aa9XVvygr3W9k6xGF46RWzr2zxF/iGoAIfA/g=
 github.com/filecoin-project/test-vectors/schema v0.0.5/go.mod h1:iQ9QXLpYWL3m7warwvK1JC/pTri8mnfEmKygNDqqY6E=

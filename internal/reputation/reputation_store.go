@@ -30,14 +30,14 @@ func (r *Reputation) changeClientReputation(clientNodeID *nodeid.NodeID, amount 
 	var exists bool
 	r.clientsMapLock.Lock()
 	val, exists = r.clients[clientNodeIDStr]
-	if (!exists) {
+	if !exists {
 		r.clientsMapLock.Unlock()
 		panic("changeClientReputation for non-existant client: " + clientNodeIDStr)
 	}
 	newVal := val + amount
-	if (newVal > clientMaxReputation) {
+	if newVal > clientMaxReputation {
 		newVal = clientMaxReputation
-	} else if (newVal < clientMinReputaiton) {
+	} else if newVal < clientMinReputaiton {
 		newVal = clientMinReputaiton
 	}
 

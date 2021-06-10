@@ -29,7 +29,7 @@ import (
 )
 
 // HandleProviderPublishDHTOfferRequest handles the provider publish dht offer request
-func HandleProviderPublishDHTOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+func HandleProviderPublishDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

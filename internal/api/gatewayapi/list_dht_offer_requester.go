@@ -31,19 +31,19 @@ import (
 func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
 	if len(args) != 3 {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 	cidMin, ok := args[0].(*cid.ContentID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 	cidMax, ok := args[1].(*cid.ContentID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 	providerID, ok := args[2].(*nodeid.NodeID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 
 	// Get the core structure
@@ -63,7 +63,7 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	}
 	// Sign the request
 	if request.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		return nil, errors.New("Internal error in signing the request")
+		return nil, errors.New("internal error in signing the request")
 	}
 	// Send the request
 	err = writer.Write(request, c.Settings.TCPInactivityTimeout)
@@ -80,14 +80,14 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	// Get the provider's signing key
 	providerInfo := c.RegisterMgr.GetProvider(providerID)
 	if providerInfo == nil {
-		return nil, errors.New("Provider information not found")
+		return nil, errors.New("provider information not found")
 	}
 	pubKey, err := providerInfo.GetSigningKey()
 	if err != nil {
-		return nil, errors.New("Fail to obatin the public key")
+		return nil, errors.New("fail to obatin the public key")
 	}
 	if response.Verify(pubKey) != nil {
-		return nil, errors.New("Fail to verify the response")
+		return nil, errors.New("fail to verify the response")
 	}
 
 	// Sending acknowledgement
@@ -139,7 +139,7 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 	}
 	// Sign the ack
 	if ack.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		return nil, errors.New("Error in signing the ack")
+		return nil, errors.New("error in signing the ack")
 	}
 
 	return nil, writer.Write(ack, c.Settings.TCPInactivityTimeout)

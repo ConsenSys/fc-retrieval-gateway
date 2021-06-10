@@ -24,7 +24,7 @@ import (
 )
 
 // HandleProviderPublishGroupOfferRequest handles the provider publish group offer request
-func HandleProviderPublishGroupOfferRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+func HandleProviderPublishGroupOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

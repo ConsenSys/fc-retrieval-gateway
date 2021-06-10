@@ -16,13 +16,15 @@ package adminapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/cid"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleGatewayAdminListDHTOffersRequest handles admin list dht offer request
@@ -61,7 +63,7 @@ func HandleGatewayAdminListDHTOffersRequest(w rest.ResponseWriter, request *fcrm
 					logging.Error("Error in generating node id")
 					continue
 				}
-				go c.P2PServer.RequestProvider(id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
+				go requestProvider(c, id, fcrmessages.GatewayListDHTOfferRequestType, cidMin, cidMax, id)
 			}
 		}()
 		refreshed = true
@@ -83,5 +85,15 @@ func HandleGatewayAdminListDHTOffersRequest(w rest.ResponseWriter, request *fcrm
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleGatewayAdminListDHTOffersRequest %s", err.Error())
+  }
+}
+
+func requestProvider(gatewayInstance *core.Core, providerID *nodeid.NodeID, msgType int32, cidMin *cid.ContentID, cidMax *cid.ContentID, nodeID *nodeid.NodeID) {
+  providerResponse, err := gatewayInstance.P2PServer.RequestProvider(providerID, msgType, cidMin, cidMax, nodeID)
+  if err != nil {
+    logging.Error("error requesting provider, method: %d; provider id: %s", msgType, providerID)
+  }
+  logging.Info("Provider response: %v", providerResponse)
 }

@@ -16,15 +16,16 @@ package clientapi
  */
 
 import (
-	"net/http"
-	"math/big"
+  "math/big"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
 // HandleClientStandardDiscoverOfferRequest is used to receive payment to respond to client standard offer query
@@ -99,5 +100,8 @@ func HandleClientStandardDiscoverOfferRequest(writer rest.ResponseWriter, reques
 		rest.Error(writer, s, http.StatusInternalServerError)
 		return
 	}
-	writer.WriteJson(response)
+
+  if writeErr := writer.WriteJson(response); writeErr != nil {
+    logging.Error("can't write JSON during HandleClientStandardDiscoverOfferRequest %s", writeErr.Error())
+  }
 }

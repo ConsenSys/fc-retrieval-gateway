@@ -16,14 +16,15 @@ package clientapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
 // HandleClientStandardCIDDiscoverRequestV2 is used to handle client request for cid offer
@@ -90,5 +91,8 @@ func HandleClientStandardCIDDiscoverRequestV2(writer rest.ResponseWriter, reques
 		rest.Error(writer, s, http.StatusInternalServerError)
 		return
 	}
-	writer.WriteJson(response)
+
+  if writeErr := writer.WriteJson(response); writeErr != nil {
+    logging.Error("can't write JSON during HandleClientStandardCIDDiscoverRequestV2 %s", writeErr.Error())
+  }
 }

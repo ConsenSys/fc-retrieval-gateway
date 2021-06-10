@@ -16,12 +16,13 @@ package adminapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleGatewayAdminInitialiseKeyRequest handles admin initilise key request
@@ -59,5 +60,7 @@ func HandleGatewayAdminInitialiseKeyRequest(w rest.ResponseWriter, request *fcrm
 		return
 	}
 	// Send message
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleGatewayAdminInitialiseKeyRequest %s", err.Error())
+  }
 }

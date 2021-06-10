@@ -83,7 +83,7 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 				return
 			}
 			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(targetGateway.Address, 0, c.Settings.SearchPrice)
-			if topup || err != nil {
+			if err != nil {
 				s := "Fail to pay recipient."
 				logging.Error(s + err.Error())
 				rest.Error(w, s, http.StatusBadRequest)
@@ -110,11 +110,14 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 	}
 
 	// Sign message
-	if response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
+	if signErr := response.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion); signErr != nil {
 		s := "Internal error: Fail to sign message."
-		logging.Error(s + err.Error())
+		logging.Error(s + signErr.Error())
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	w.WriteJson(response)
+
+  if writeErr := w.WriteJson(response); writeErr != nil {
+    logging.Error("can't write JSON during HandleClientDHTDiscoverOfferRequest %s", writeErr.Error())
+  }
 }

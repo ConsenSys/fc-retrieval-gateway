@@ -16,15 +16,16 @@ package adminapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/register"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/register"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest handles updating state of the Gateway, namely if it supports group CID offers
@@ -58,19 +59,29 @@ func HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseW
 		return
 	}
 	// Send message
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest %s", err.Error())
+  }
 
-	go notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer, c.GatewayID)
+	notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer, c.GatewayID)
 }
 
-func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer, thisGatewayId *nodeid.NodeID) {
+func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer, callerGatewayId *nodeid.NodeID) {
 	for _, pvd := range providers {
-		id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
+		providerID, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
 		if err != nil {
 			logging.Error("Error in generating node id")
 			continue
 		}
-		thisGatewaySupportsGroupCIDOffer := true
-		go p2pServer.RequestProvider(id, fcrmessages.GatewayNotifyProviderGroupCIDOfferSupportedRequestType, thisGatewayId, thisGatewaySupportsGroupCIDOffer)
+		const thisGatewaySupportsGroupCIDOffer = true
+    go notifyProvider(p2pServer, providerID, fcrmessages.GatewayListDHTOfferRequestType, callerGatewayId, thisGatewaySupportsGroupCIDOffer)
 	}
+}
+
+func notifyProvider(p2pServer *fcrp2pserver.FCRP2PServer, providerID *nodeid.NodeID, msgType int32, gatewayID *nodeid.NodeID, thisGatewaySupportsGroupCIDOffer bool) {
+  providerResponse, err := p2pServer.RequestProvider(providerID, msgType, gatewayID, thisGatewaySupportsGroupCIDOffer)
+  if err != nil {
+    logging.Error("error notifying provider, method: %d; provider id: %s", msgType, providerID)
+  }
+  logging.Info("Provider response: %v", providerResponse)
 }

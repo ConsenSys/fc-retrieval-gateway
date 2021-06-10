@@ -30,15 +30,15 @@ import (
 func RequestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, args ...interface{}) (*fcrmessages.FCRMessage, error) {
 	// Get parameters
 	if len(args) != 2 {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
-	cid, ok := args[0].(*cid.ContentID)
+	contentID, ok := args[0].(*cid.ContentID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 	gatewayID, ok := args[1].(*nodeid.NodeID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 
 	// Get the core structure
@@ -46,13 +46,13 @@ func RequestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcr
 
 	// Construct message
 	// TODO, ADD nonce, TTL and payment information.
-	request, err := fcrmessages.EncodeGatewayDHTDiscoverRequest(c.GatewayID, cid, 1, time.Now().Add(10*time.Second).Unix(), "", "")
+	request, err := fcrmessages.EncodeGatewayDHTDiscoverRequest(c.GatewayID, contentID, 1, time.Now().Add(10*time.Second).Unix(), "", "")
 	if err != nil {
 		return nil, err
 	}
 	// Sign the request
 	if request.Sign(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion) != nil {
-		return nil, errors.New("Internal error in signing the request")
+		return nil, errors.New("internal error in signing the request")
 	}
 	// Send the request
 	err = writer.Write(request, c.Settings.TCPInactivityTimeout)
@@ -69,15 +69,15 @@ func RequestGatewayDHTDiscover(reader *fcrp2pserver.FCRServerReader, writer *fcr
 	// Get the gateway's signing key
 	gatewayInfo := c.RegisterMgr.GetGateway(gatewayID)
 	if gatewayInfo == nil {
-		return nil, errors.New("Gateway information not found")
+		return nil, errors.New("gateway information not found")
 	}
 	pubKey, err := gatewayInfo.GetSigningKey()
 	if err != nil {
-		return nil, errors.New("Fail to obatin the public key")
+		return nil, errors.New("fail to obatin the public key")
 	}
 
 	if response.Verify(pubKey) != nil {
-		return nil, errors.New("Fail to verify the response")
+		return nil, errors.New("fail to verify the response")
 	}
 	return response, nil
 }

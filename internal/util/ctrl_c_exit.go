@@ -7,7 +7,7 @@ import (
 )
 
 
-// Configure the program such that when Control-C is hit, gracefulExit is called, followed by program exit.
+// SetUpCtrlCExit - configure the program such that when Control-C is hit, gracefulExit is called, followed by program exit.
 func SetUpCtrlCExit(gracefulExit func()) {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)

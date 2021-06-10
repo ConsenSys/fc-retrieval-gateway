@@ -16,12 +16,13 @@ package adminapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleGatewayAdminSetReputationRequest handles admin set reputation request
@@ -69,5 +70,7 @@ func HandleGatewayAdminSetReputationRequest(w rest.ResponseWriter, request *fcrm
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleGatewayAdminSetReputationRequest %s", err.Error())
+  }
 }

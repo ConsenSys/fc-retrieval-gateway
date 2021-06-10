@@ -31,7 +31,7 @@ import (
 )
 
 // HandleGatewayDHTDiscoverRequest handles the gateway dht discover request
-func HandleGatewayDHTDiscoverRequest(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
+func HandleGatewayDHTDiscoverRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2pserver.FCRServerWriter, request *fcrmessages.FCRMessage) error {
 	// Get the core structure
 	c := core.GetSingleInstance()
 

@@ -71,7 +71,7 @@ func HandleGatewayDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2
 
 	subOffers := make([]cidoffer.SubCIDOffer, len(offerDigests))
 	fundedPaymentChannel := make([]bool, len(offerDigests))
-	found := true
+	const found = true
 
 	for i, digest := range offerDigests {
 		offer, exist := c.OffersMgr.GetOfferByDigest(digest)

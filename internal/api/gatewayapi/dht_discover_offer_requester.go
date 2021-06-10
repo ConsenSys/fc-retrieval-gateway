@@ -33,13 +33,13 @@ func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer
 	if len(args) != 6 {
 		return nil, errors.New("wrong arguments")
 	}
-	cid, ok := args[0].(*cid.ContentID)
+	contentID, ok := args[0].(*cid.ContentID)
 	if !ok {
 		return nil, errors.New("wrong arguments")
 	}
 	gatewayID, ok := args[1].(*nodeid.NodeID)
 	if !ok {
-		return nil, errors.New("Wrong arguments")
+		return nil, errors.New("wrong arguments")
 	}
 	nonce, ok := args[2].(int64)
 	if !ok {
@@ -62,7 +62,7 @@ func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer
 	c := core.GetSingleInstance()
 
 	// // Construct message
-	request, err := fcrmessages.EncodeGatewayDHTDiscoverOfferRequest(cid, nonce, offerDigests, paychAddr, voucher)
+	request, err := fcrmessages.EncodeGatewayDHTDiscoverOfferRequest(contentID, nonce, offerDigests, paychAddr, voucher)
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +86,15 @@ func RequestGatewayDHTDiscoverOffer(reader *fcrp2pserver.FCRServerReader, writer
 	// Get the gateway's signing key
 	gatewayInfo := c.RegisterMgr.GetGateway(gatewayID)
 	if gatewayInfo == nil {
-		return nil, errors.New("Gateway information not found")
+		return nil, errors.New("gateway information not found")
 	}
 	pubKey, err := gatewayInfo.GetSigningKey()
 	if err != nil {
-		return nil, errors.New("Fail to obatin the public key")
+		return nil, errors.New("fail to obatin the public key")
 	}
 
 	if response.Verify(pubKey) != nil {
-		return nil, errors.New("Fail to verify the response")
+		return nil, errors.New("fail to verify the response")
 	}
 	return response, nil
 }

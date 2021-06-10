@@ -16,13 +16,14 @@ package adminapi
  */
 
 import (
-	"net/http"
+  "net/http"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrpaymentmgr"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ant0ine/go-json-rest/rest"
+
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrpaymentmgr"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleGatewayAdminInitialiseKeyRequestV2 handles admin initilise key request with initialized payment manager
@@ -67,5 +68,7 @@ func HandleGatewayAdminInitialiseKeyRequestV2(w rest.ResponseWriter, request *fc
 		return
 	}
 	// Send message
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleGatewayAdminInitialiseKeyRequestV2 %s", err.Error())
+  }
 }

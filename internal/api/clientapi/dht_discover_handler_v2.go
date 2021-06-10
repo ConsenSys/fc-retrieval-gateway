@@ -16,16 +16,16 @@ package clientapi
  */
 
 import (
-	"net/http"
-	"time"
+  "math/big"
+  "net/http"
+  "time"
 
-	"math/big"
+  "github.com/ant0ine/go-json-rest/rest"
 
-	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-	"github.com/ant0ine/go-json-rest/rest"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleClientDHTCIDDiscoverRequestV2 is used to handle client request for cid offer
@@ -101,7 +101,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 				return
 			}
 			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(gw.Address, 0, c.Settings.SearchPrice)
-			if topup || err != nil {
+			if err != nil {
 				s := "Fail to pay recipient."
 				logging.Error(s + err.Error())
 				rest.Error(w, s, http.StatusBadRequest)
@@ -133,5 +133,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequestV2 %s", err.Error())
+  }
 }

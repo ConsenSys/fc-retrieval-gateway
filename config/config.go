@@ -4,17 +4,16 @@ Package config - combines operations used to setup parameters for Gateway node i
 package config
 
 import (
-	"flag"
-	"fmt"
-	"log"
-	"math/big"
-	"strconv"
-	"time"
+  "flag"
+  "fmt"
+  "math/big"
+  "time"
 
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
+  "github.com/spf13/pflag"
+  "github.com/spf13/viper"
 
-	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
+  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+  "github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
 )
 
 // NewConfig creates a new configuration
@@ -25,14 +24,6 @@ func NewConfig() *viper.Viper {
 	bindFlags(conf)
 	setValues(conf)
 	return conf
-}
-
-func parseUint8(value string) uint8 {
-	result, err := strconv.ParseUint(value, 10, 8)
-	if err != nil {
-		log.Panic("unable to parse uint8")
-	}
-	return uint8(result)
 }
 
 // Map sets the config for the Gateway. NB: Gateways start without a private key. Private keys are provided by a gateway admin client.
@@ -116,7 +107,9 @@ func defineFlags(conf *viper.Viper) {
 func bindFlags(conf *viper.Viper) {
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
-	conf.BindPFlags(pflag.CommandLine)
+	if err := conf.BindPFlags(pflag.CommandLine); err != nil {
+	  logging.Error("can't bind a command line flag")
+  }
 }
 
 func setValues(conf *viper.Viper) {

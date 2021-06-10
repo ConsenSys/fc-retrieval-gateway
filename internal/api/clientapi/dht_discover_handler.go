@@ -103,5 +103,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-	w.WriteJson(response)
+  if err := w.WriteJson(response); err != nil {
+    logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequest %s", err.Error())
+  }
 }

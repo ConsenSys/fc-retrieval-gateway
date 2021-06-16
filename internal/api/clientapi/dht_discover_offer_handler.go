@@ -68,7 +68,7 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 		targetGateway := c.RegisterMgr.GetGateway(&targetGatewayID)
 		// Pay this gateway
 		toPay := new(big.Int).Mul(big.NewInt(int64(len(thisGatewayOfferDigests))), c.Settings.OfferPrice)
-		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(targetGateway.Address, 0, toPay)
+		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(targetGateway.GetAddress(), 0, toPay)
 		if err != nil {
 			s := "Fail to pay recipient."
 			logging.Error(s + err.Error())
@@ -76,13 +76,13 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 			return
 		}
 		if topup {
-			if err := c.PaymentMgr.Topup(targetGateway.Address, c.Settings.TopupAmount); err != nil {
+			if err := c.PaymentMgr.Topup(targetGateway.GetAddress(), c.Settings.TopupAmount); err != nil {
 				s := "Fail to top up."
 				logging.Error(s + err.Error())
 				rest.Error(w, s, http.StatusBadRequest)
 				return
 			}
-			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(targetGateway.Address, 0, c.Settings.SearchPrice)
+			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(targetGateway.GetAddress(), 0, c.Settings.SearchPrice)
 			if err != nil {
 				s := "Fail to pay recipient."
 				logging.Error(s + err.Error())

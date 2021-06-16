@@ -66,9 +66,9 @@ func HandleGatewayAdminUpdateGatewayGroupCIDOfferSupportRequest(w rest.ResponseW
 	notifyProvidersOnSupportedGroupCIDOffer(c.RegisterMgr.GetAllProviders(), c.P2PServer, c.GatewayID)
 }
 
-func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegister, p2pServer *fcrp2pserver.FCRP2PServer, callerGatewayId *nodeid.NodeID) {
+func notifyProvidersOnSupportedGroupCIDOffer(providers []register.ProviderRegistrar, p2pServer *fcrp2pserver.FCRP2PServer, callerGatewayId *nodeid.NodeID) {
 	for _, pvd := range providers {
-		providerID, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
+		providerID, err := nodeid.NewNodeIDFromHexString(pvd.GetNodeID())
 		if err != nil {
 			logging.Error("Error in generating node id")
 			continue

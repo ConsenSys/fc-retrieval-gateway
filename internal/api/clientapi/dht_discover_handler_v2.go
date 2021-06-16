@@ -78,7 +78,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 	contactedResp := make([]fcrmessages.FCRMessage, 0)
 	unContactable := make([]nodeid.NodeID, 0)
 	for _, gw := range gateways {
-		id, err := nodeid.NewNodeIDFromHexString(gw.NodeID)
+		id, err := nodeid.NewNodeIDFromHexString(gw.GetNodeID())
 		if err != nil {
 			s := "Fail to generate node id."
 			logging.Error(s + err.Error())
@@ -86,7 +86,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 			return
 		}
 		// Pay this gateway
-		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(gw.Address, 0, c.Settings.SearchPrice)
+		paychAddr, voucher, topup, err := c.PaymentMgr.Pay(gw.GetAddress(), 0, c.Settings.SearchPrice)
 		if err != nil {
 			s := "Fail to pay recipient."
 			logging.Error(s + err.Error())
@@ -94,13 +94,13 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 			return
 		}
 		if topup {
-			if err := c.PaymentMgr.Topup(gw.Address, c.Settings.TopupAmount); err != nil {
+			if err := c.PaymentMgr.Topup(gw.GetAddress(), c.Settings.TopupAmount); err != nil {
 				s := "Fail to top up."
 				logging.Error(s + err.Error())
 				rest.Error(w, s, http.StatusBadRequest)
 				return
 			}
-			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(gw.Address, 0, c.Settings.SearchPrice)
+			paychAddr, voucher, topup, err = c.PaymentMgr.Pay(gw.GetAddress(), 0, c.Settings.SearchPrice)
 			if err != nil {
 				s := "Fail to pay recipient."
 				logging.Error(s + err.Error())

@@ -60,7 +60,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 	}
 	gatewayIDs := make([]*nodeid.NodeID, 0)
 	for _, gateway := range gateways {
-		id, err := nodeid.NewNodeIDFromHexString(gateway.NodeID)
+		id, err := nodeid.NewNodeIDFromHexString(gateway.GetNodeID())
 		if err != nil {
 			s := "Fail to generate node id."
 			logging.Error(s + err.Error())

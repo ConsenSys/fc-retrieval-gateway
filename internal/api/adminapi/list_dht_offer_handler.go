@@ -58,7 +58,7 @@ func HandleGatewayAdminListDHTOffersRequest(w rest.ResponseWriter, request *fcrm
 			}
 			pvds := c.RegisterMgr.GetAllProviders()
 			for _, pvd := range pvds {
-				id, err := nodeid.NewNodeIDFromHexString(pvd.NodeID)
+				id, err := nodeid.NewNodeIDFromHexString(pvd.GetNodeID())
 				if err != nil {
 					logging.Error("Error in generating node id")
 					continue

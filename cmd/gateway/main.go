@@ -57,11 +57,6 @@ func main() {
 	// Initialise a register manager
 	c.RegisterMgr = fcrregistermgr.NewFCRRegisterMgr(appSettings.RegisterAPIURL, true, true, 10*time.Second)
 
-	// Start register manager's routine
-	if err := c.RegisterMgr.Start(); err != nil {
-    logging.Error("error starting Register Manager: %s", err.Error())
-  }
-
 	// Create REST Server
 	c.RESTServer = fcrrestserver.NewFCRRESTServer(
 		[]string{appSettings.BindAdminAPI, appSettings.BindRestAPI})
@@ -119,6 +114,11 @@ func main() {
 		logging.Error("Error starting P2P server: %s", err.Error())
 		return
 	}
+
+  // Start register manager's routine
+  if err := c.RegisterMgr.Start(); err != nil {
+    logging.Error("error starting Register Manager: %s", err.Error())
+  }
 
 	// Configure what should be called if Control-C is hit.
 	util.SetUpCtrlCExit(gracefulExit)

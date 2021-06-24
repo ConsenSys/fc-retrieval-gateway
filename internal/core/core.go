@@ -25,13 +25,13 @@ import (
 
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrcrypto"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmerkletree"
-	fcroffermgr "github.com/ConsenSys/fc-retrieval-common/pkg/offermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrp2pserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrpaymentmgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrregistermgr"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrrestserver"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
 	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+	fcroffermgr "github.com/ConsenSys/fc-retrieval-common/pkg/offermgr"
 
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/reputation"
 	"github.com/ConsenSys/fc-retrieval-gateway/internal/util/settings"
@@ -121,14 +121,15 @@ func GetSingleInstance(confs ...*settings.AppSettings) *Core {
 		if err != nil {
 			panic(err)
 		}
-
+		gatewayID, _ := nodeid.NewNodeIDFromHexString("101112131415161718191A1B1C1D1E3F202122232425262728292A2B2C2D2E1F")
+		keyPair, _ := fcrcrypto.DecodePrivateKey("015ed053eab6fdf18c03954373ff7f89089992017d56beb8b05305b19800d6afe0")
 		instance = &Core{
 			ProtocolVersion:                protocolVersion,
 			ProtocolSupported:              []int32{protocolVersion, protocolSupported},
 			Settings:                       confs[0],
-			GatewayID:                      nil,
-			GatewayPrivateKey:              nil,
-			GatewayPrivateKeyVersion:       nil,
+			GatewayID:                      gatewayID,
+			GatewayPrivateKey:              keyPair,
+			GatewayPrivateKeyVersion:       fcrcrypto.InitialKeyVersion(),
 			OffersMgr:                      fcroffermgr.NewFCROfferMgr(),
 			ReputationMgr:                  reputation.GetSingleInstance(),
 			RegistrationBlockHash:          "TODO",

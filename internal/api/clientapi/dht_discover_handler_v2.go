@@ -16,16 +16,16 @@ package clientapi
  */
 
 import (
-  "math/big"
-  "net/http"
-  "time"
+	"math/big"
+	"net/http"
+	"time"
 
-  "github.com/ant0ine/go-json-rest/rest"
+	"github.com/ant0ine/go-json-rest/rest"
 
-  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
-  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/nodeid"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
 )
 
 // HandleClientDHTCIDDiscoverRequestV2 is used to handle client request for cid offer
@@ -117,7 +117,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 		}
 	}
 
-	response, err := fcrmessages.EncodeClientDHTDiscoverResponseV2(contacted, contactedResp, unContactable, nonce)
+	response, err := fcrmessages.EncodeClientDHTDiscoverResponseV2(contacted, contactedResp, unContactable, nonce, false, 0)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
@@ -133,7 +133,7 @@ func HandleClientDHTCIDDiscoverRequestV2(w rest.ResponseWriter, request *fcrmess
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-  if err := w.WriteJson(response); err != nil {
-    logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequestV2 %s", err.Error())
-  }
+	if err := w.WriteJson(response); err != nil {
+		logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequestV2 %s", err.Error())
+	}
 }

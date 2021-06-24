@@ -16,16 +16,16 @@ package clientapi
  */
 
 import (
-  "math/big"
-  "net/http"
+	"math/big"
+	"net/http"
 
-  "github.com/ant0ine/go-json-rest/rest"
+	"github.com/ant0ine/go-json-rest/rest"
 
-  "github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-  "github.com/ConsenSys/fc-retrieval-gateway/internal/util"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
 // HandleClientStandardDiscoverOfferRequest is used to receive payment to respond to client standard offer query
@@ -72,7 +72,7 @@ func HandleClientStandardDiscoverOfferRequest(writer rest.ResponseWriter, reques
 		}
 
 		// Construct response
-		response, err = fcrmessages.EncodeClientStandardDiscoverOfferResponse(pieceCID, nonce, found, subOffers, fundedPaymentChannel)
+		response, err = fcrmessages.EncodeClientStandardDiscoverOfferResponse(pieceCID, nonce, found, subOffers, fundedPaymentChannel, false, 0)
 	} else {
 		// Insufficient Funds Response
 		if err != nil {
@@ -81,7 +81,8 @@ func HandleClientStandardDiscoverOfferRequest(writer rest.ResponseWriter, reques
 			logging.Error("PaymentMgr insufficient funds received " + receive.String() + " (default: " + c.Settings.SearchPrice.String() + ")")
 		}
 		// TODO get real payment channel ID
-		response, err = fcrmessages.EncodeInsufficientFundsResponse(42)
+		var paymentChannelID = int64(42)
+		response, err = fcrmessages.EncodeClientStandardDiscoverResponseV2(pieceCID, nonce, false, nil, nil, true, paymentChannelID)
 	}
 
 	if err != nil {
@@ -101,7 +102,7 @@ func HandleClientStandardDiscoverOfferRequest(writer rest.ResponseWriter, reques
 		return
 	}
 
-  if writeErr := writer.WriteJson(response); writeErr != nil {
-    logging.Error("can't write JSON during HandleClientStandardDiscoverOfferRequest %s", writeErr.Error())
-  }
+	if writeErr := writer.WriteJson(response); writeErr != nil {
+		logging.Error("can't write JSON during HandleClientStandardDiscoverOfferRequest %s", writeErr.Error())
+	}
 }

@@ -101,7 +101,7 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 		}
 	}
 
-	response, err := fcrmessages.EncodeClientDHTDiscoverOfferResponse(cid, nonce, contactedGateways, contactedResp)
+	response, err := fcrmessages.EncodeClientDHTDiscoverOfferResponse(cid, nonce, contactedGateways, contactedResp, false, 0)
 	if err != nil {
 		s := "Internal error: Fail to encode message, type: " + strconv.Itoa(fcrmessages.ClientDHTDiscoverOfferResponseType)
 		logging.Error(s + err.Error())
@@ -117,7 +117,7 @@ func HandleClientDHTDiscoverOfferRequest(w rest.ResponseWriter, request *fcrmess
 		return
 	}
 
-  if writeErr := w.WriteJson(response); writeErr != nil {
-    logging.Error("can't write JSON during HandleClientDHTDiscoverOfferRequest %s", writeErr.Error())
-  }
+	if writeErr := w.WriteJson(response); writeErr != nil {
+		logging.Error("can't write JSON during HandleClientDHTDiscoverOfferRequest %s", writeErr.Error())
+	}
 }

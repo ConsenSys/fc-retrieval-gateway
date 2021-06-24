@@ -63,11 +63,6 @@ func HandleGatewayDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2
 
 	lenOffers := big.NewInt(int64(len(offerDigests)))
 	expectedAmount := c.Settings.OfferPrice.Mul(c.Settings.OfferPrice, lenOffers)
-	if amount.Cmp(expectedAmount) < 0 {
-		logging.Error("Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String())
-		// TODO update paymentChannelID
-		return writer.WriteInsufficientFunds(c.Settings.TCPInactivityTimeout, 42)
-	}
 
 	subOffers := make([]cidoffer.SubCIDOffer, len(offerDigests))
 	fundedPaymentChannel := make([]bool, len(offerDigests))
@@ -84,11 +79,18 @@ func HandleGatewayDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, writer *fcrp2
 
 		subOffers[i] = *cidOffer
 	}
-
-	// Construct response
-	response, err := fcrmessages.EncodeGatewayDHTDiscoverOfferResponse(pieceCID, nonce, found, subOffers, fundedPaymentChannel)
-
-	if err != nil {
+	var response *fcrmessages.FCRMessage
+	var encodingErr error
+	if amount.Cmp(expectedAmount) < 0 {
+		logging.Error("Insufficient Funds, received " + amount.String() + ", expected: " + expectedAmount.String())
+		// TODO get real payment channel ID
+		var paymentChannelID = int64(42)
+		response, encodingErr = fcrmessages.EncodeGatewayDHTDiscoverOfferResponse(pieceCID, nonce, found, subOffers, fundedPaymentChannel, true, paymentChannelID)
+	} else {
+		// Construct response
+		response, encodingErr = fcrmessages.EncodeGatewayDHTDiscoverOfferResponse(pieceCID, nonce, found, subOffers, fundedPaymentChannel, false, 0)
+	}
+	if encodingErr != nil {
 		// TODO: Do we need a response of internal error?
 		// There are three possible errors, 1. Protocol errors (request is not correct) 2. Communication errors (lost connection) and 3. Internal errors.
 		// Need to do error management.

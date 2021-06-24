@@ -87,7 +87,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		}
 	}
 
-	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, contactedResp, unContactable, nonce)
+	response, err := fcrmessages.EncodeClientDHTDiscoverResponse(contacted, contactedResp, unContactable, nonce, false, 0)
 	if err != nil {
 		s := "Internal error: Fail to encode message."
 		logging.Error(s + err.Error())
@@ -103,7 +103,7 @@ func HandleClientDHTCIDDiscoverRequest(w rest.ResponseWriter, request *fcrmessag
 		rest.Error(w, s, http.StatusInternalServerError)
 		return
 	}
-  if err := w.WriteJson(response); err != nil {
-    logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequest %s", err.Error())
-  }
+	if err := w.WriteJson(response); err != nil {
+		logging.Error("can't write JSON during HandleClientDHTCIDDiscoverRequest %s", err.Error())
+	}
 }

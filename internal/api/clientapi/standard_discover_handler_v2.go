@@ -16,15 +16,15 @@ package clientapi
  */
 
 import (
-  "net/http"
+	"net/http"
 
-  "github.com/ant0ine/go-json-rest/rest"
+	"github.com/ant0ine/go-json-rest/rest"
 
-  "github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
-  "github.com/ConsenSys/fc-retrieval-common/pkg/logging"
-  "github.com/ConsenSys/fc-retrieval-gateway/internal/core"
-  "github.com/ConsenSys/fc-retrieval-gateway/internal/util"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/cidoffer"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/fcrmessages"
+	"github.com/ConsenSys/fc-retrieval-common/pkg/logging"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/core"
+	"github.com/ConsenSys/fc-retrieval-gateway/internal/util"
 )
 
 // HandleClientStandardCIDDiscoverRequestV2 is used to handle client request for cid offer
@@ -63,7 +63,7 @@ func HandleClientStandardCIDDiscoverRequestV2(writer rest.ResponseWriter, reques
 		}
 
 		// Construct response
-		response, err = fcrmessages.EncodeClientStandardDiscoverResponseV2(pieceCID, nonce, exists, subOfferDigests, fundedPaymentChannel)
+		response, err = fcrmessages.EncodeClientStandardDiscoverResponseV2(pieceCID, nonce, exists, subOfferDigests, fundedPaymentChannel, false, 0)
 	} else {
 		// Insufficient Funds Response
 		if err != nil {
@@ -72,7 +72,8 @@ func HandleClientStandardCIDDiscoverRequestV2(writer rest.ResponseWriter, reques
 			logging.Error("PaymentMgr insufficient funds received " + receive.String() + " (default: " + c.Settings.SearchPrice.String() + ")")
 		}
 		// TODO get real payment channel ID
-		response, err = fcrmessages.EncodeInsufficientFundsResponse(42)
+		var paymentChannelID = int64(42)
+		response, err = fcrmessages.EncodeClientStandardDiscoverResponseV2(pieceCID, nonce, exists, nil, nil, true, paymentChannelID)
 	}
 
 	if err != nil {
@@ -92,7 +93,7 @@ func HandleClientStandardCIDDiscoverRequestV2(writer rest.ResponseWriter, reques
 		return
 	}
 
-  if writeErr := writer.WriteJson(response); writeErr != nil {
-    logging.Error("can't write JSON during HandleClientStandardCIDDiscoverRequestV2 %s", writeErr.Error())
-  }
+	if writeErr := writer.WriteJson(response); writeErr != nil {
+		logging.Error("can't write JSON during HandleClientStandardCIDDiscoverRequestV2 %s", writeErr.Error())
+	}
 }

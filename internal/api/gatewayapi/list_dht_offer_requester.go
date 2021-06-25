@@ -123,7 +123,7 @@ func RequestListCIDOffer(reader *fcrp2pserver.FCRServerReader, writer *fcrp2pser
 		}
 
 		// Sign the offer message
-		sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, cidOfferMsg)
+		sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, cidOfferMsg.GetMessageBody())
 		if err != nil {
 			return nil, err
 		}

@@ -70,7 +70,7 @@ func HandleProviderPublishDHTOfferRequest(_ *fcrp2pserver.FCRServerReader, write
 	}
 
 	// Sign the request
-	sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, request)
+	sig, err := fcrcrypto.SignMessage(c.GatewayPrivateKey, c.GatewayPrivateKeyVersion, request.GetMessageBody())
 	if err != nil {
 		logging.Error("Internal error in signing message.")
 		return writer.WriteInvalidMessage(c.Settings.TCPInactivityTimeout)

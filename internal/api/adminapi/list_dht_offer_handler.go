@@ -93,7 +93,12 @@ func HandleGatewayAdminListDHTOffersRequest(w rest.ResponseWriter, request *fcrm
 func requestProvider(gatewayInstance *core.Core, providerID *nodeid.NodeID, msgType int32, cidMin *cid.ContentID, cidMax *cid.ContentID, nodeID *nodeid.NodeID) {
   providerResponse, err := gatewayInstance.P2PServer.RequestProvider(providerID, msgType, cidMin, cidMax, nodeID)
   if err != nil {
-    logging.Error("error requesting provider, method: %d; provider id: %s", msgType, providerID)
+    logging.Error("error requesting provider, request message type: %d; provider id: %s, error: %s", msgType, providerID.ToString(), err.Error())
+    return
   }
-  logging.Info("Provider response: %v", providerResponse)
+  if providerResponse == nil {
+    logging.Warn("gateway can't request a provider id: %s, request message type: %d; P2P method RequestProvider returned nil", providerID.ToString(), msgType)
+    return
+  }
+  logging.Debug("Provider response: %s for request message type: %d", providerResponse.DumpMessage(), msgType)
 }

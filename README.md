@@ -12,7 +12,7 @@ Create a `.env` file, using [.env.example](./.env.example) as a reference:
 cp .env.example .env
 =======
 
-## Development
+## Development 
 
 ### Start the service with Docker
 
